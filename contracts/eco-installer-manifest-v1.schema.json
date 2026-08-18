@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/OmarAglan/Baa-Developer-Kit/contracts/eco-installer-manifest-v1.schema.json",
+  "title": "Baa ecosystem Windows installer manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "release_version",
+    "target",
+    "generated_at_utc",
+    "components"
+  ],
+  "properties": {
+    "schema_version": { "const": "eco-installer-manifest-v1" },
+    "release_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$"
+    },
+    "target": { "const": "x86_64-windows" },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "components": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/component" }
+    }
+  },
+  "$defs": {
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "display_name",
+        "version",
+        "install_order",
+        "installer",
+        "sha256",
+        "silent_arguments",
+        "health_check"
+      ],
+      "properties": {
+        "id": { "enum": ["nazm", "baa", "takween", "qalam"] },
+        "display_name": { "type": "string", "minLength": 1 },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$"
+        },
+        "install_order": { "type": "integer", "minimum": 10, "maximum": 40 },
+        "installer": {
+          "type": "string",
+          "pattern": "^[^/\\\\]+\\.exe$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "silent_arguments": {
+          "type": "array",
+          "minItems": 5,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "health_check": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["program", "arguments", "expected_exit_code"],
+          "properties": {
+            "program": { "type": "string", "minLength": 1 },
+            "arguments": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "expected_exit_code": { "type": "integer", "minimum": 0, "maximum": 255 }
+          }
+        }
+      }
+    }
+  }
+}
