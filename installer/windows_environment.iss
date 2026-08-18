@@ -108,31 +108,39 @@ begin
   end;
 end;
 
-procedure EcoEnsurePathContains(const Directory: string);
+function EcoEnsurePathContains(const Directory: string): Boolean;
 var
   Root: Integer;
   Subkey, CurrentValue, UpdatedValue: string;
 begin
+  Result := False;
   EcoEnvironmentRoot(Root, Subkey);
   CurrentValue := '';
   RegQueryStringValue(Root, Subkey, 'Path', CurrentValue);
   UpdatedValue := EcoAppendPath(CurrentValue, Directory);
   if UpdatedValue <> CurrentValue then
+  begin
     RegWriteExpandStringValue(Root, Subkey, 'Path', UpdatedValue);
+    Result := True;
+  end;
 end;
 
-procedure EcoEnsurePathRemoved(const Directory: string);
+function EcoEnsurePathRemoved(const Directory: string): Boolean;
 var
   Root: Integer;
   Subkey, CurrentValue, UpdatedValue: string;
 begin
+  Result := False;
   EcoEnvironmentRoot(Root, Subkey);
   CurrentValue := '';
   if not RegQueryStringValue(Root, Subkey, 'Path', CurrentValue) then
     Exit;
   UpdatedValue := EcoRemovePath(CurrentValue, Directory);
   if UpdatedValue <> CurrentValue then
+  begin
     RegWriteExpandStringValue(Root, Subkey, 'Path', UpdatedValue);
+    Result := True;
+  end;
 end;
 
 procedure EcoSetOwnedEnvironment(const Name: string; const Value: string);
