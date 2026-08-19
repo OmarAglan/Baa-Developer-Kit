@@ -21,17 +21,53 @@
 - [`windows_environment.iss`](installer/windows_environment.iss) هو المرجع
   المشترك لإدارة `PATH` ومتغيرات البيئة المملوكة بأمان.
 
-## إنشاء بيان إصدار
+## البناء
 
-بعد بناء المثبتات الأربعة:
+بعد بناء المثبتات الأربعة في مستودعاتها المجاورة، ينشئ الأمر التالي البيان
+والمثبت الشامل غير المتصل وملف SHA-256:
 
 ```powershell
-.\scripts\New-EcoInstallerManifest.ps1 `
-  -NazmInstaller ..\Nazm\dist\installer\nazm-setup-0.4.0-x64.exe `
-  -BaaInstaller ..\Baa\dist\installer\baa-setup-0.6.0-x64.exe `
-  -TakweenInstaller ..\Takween\dist\installer\takween-setup-0.1.0-x64.exe `
-  -QalamInstaller ..\Qalam-IDE\dist\installer\qalam-setup-3.3.0-x64.exe
+.\scripts\Build-DeveloperKitInstaller.ps1
 ```
 
-ينتج الأمر `dist/eco-installer-manifest-v1.json`. لا يقبل بناء المثبت الشامل
-ملفًا مفقودًا أو هضمًا صفريًا أو اسم مثبت غير مطابق.
+الناتج هو:
+
+- `dist/installer/baa-developer-kit-setup-0.1.0-x64.exe`
+- `dist/installer/baa-developer-kit-setup-0.1.0-x64.exe.sha256`
+- `dist/eco-installer-manifest-v1.json`
+
+لا يقبل البناء ملفًا مفقودًا أو اسمًا غير مطابق أو ملف SHA-256 غير صالح. ويمكن
+توقيع المثبت عند توافر شهادة إصدار بتمرير اسمي أداة التوقيع وأمرها كما يعرفهما
+Inno Setup:
+
+```powershell
+.\scripts\Build-DeveloperKitInstaller.ps1 `
+  -SignToolName releasesign `
+  -SignToolCommand '<signtool command using $f>'
+```
+
+## التحقق المحلي
+
+يتطلب اختبار دورة الحياة صلاحيات تثبيت البرامج لأنه يشغل المثبتات الحقيقية،
+ثم يعيد تشغيلها للإصلاح ويزيلها:
+
+```powershell
+.\scripts\Test-DeveloperKitInstaller.ps1
+```
+
+يستخدم الاختبار مجلدًا مؤقتًا طويلًا يحوي العربية والمسافات، ويتحقق من أوامر
+نظم وباء وتكوين، ويبني ويشغل برنامج باء، ويبدأ قلم وBaa-LSP، ثم يتحقق من
+السجلات والبيان ومن استعادة البيئة بعد الإزالة.
+
+## التشغيل الصامت
+
+```powershell
+.\baa-developer-kit-setup-0.1.0-x64.exe `
+  /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /ALLUSERS
+```
+
+يستخدم `/CURRENTUSER` بدل `/ALLUSERS` للتثبيت الخاص بالمستخدم. يحتفظ المثبت
+بالسجلات في `BaaEcosystem/InstallerLogs` تحت `ProgramData` أو `LocalAppData`
+بحسب النطاق.
+
+راجع [قائمة تحقق الإصدار](docs/RELEASE_CHECKLIST.md) قبل نشر أي بناء عام.

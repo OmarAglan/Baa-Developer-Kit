@@ -56,11 +56,22 @@ function New-Component {
     }
 }
 
+$nazmName = -join [char[]](0x0646, 0x0638, 0x0645)
+$baaName = -join [char[]](0x0628, 0x0627, 0x0621)
+$takweenName = -join [char[]](0x062A, 0x0643, 0x0648, 0x064A, 0x0646)
+$qalamName = -join [char[]](0x0642, 0x0644, 0x0645)
+$arabicVersion = "--" +
+    (-join [char[]](0x0625, 0x0635, 0x062F, 0x0627, 0x0631))
+
 $components = @(
-    New-Component "nazm" "نظم" $NazmVersion 10 $NazmInstaller "نظم.exe" @("--إصدار")
-    New-Component "baa" "باء" $BaaVersion 20 $BaaInstaller "baa.exe" @("--version")
-    New-Component "takween" "تكوين" $TakweenVersion 30 $TakweenInstaller "تكوين.exe" @("--إصدار")
-    New-Component "qalam" "قلم" $QalamVersion 40 $QalamInstaller "Qalam.exe" @("--verify-tools=json")
+    New-Component "nazm" $nazmName $NazmVersion 10 $NazmInstaller `
+        ("bin\" + $nazmName + ".exe") @($arabicVersion)
+    New-Component "baa" $baaName $BaaVersion 20 $BaaInstaller `
+        "baa.exe" @("--version")
+    New-Component "takween" $takweenName $TakweenVersion 30 $TakweenInstaller `
+        ("bin\" + $takweenName + ".exe") @($arabicVersion)
+    New-Component "qalam" $qalamName $QalamVersion 40 $QalamInstaller `
+        "baa-lsp\baa-lsp.exe" @("--version")
 )
 
 $manifest = [ordered]@{
