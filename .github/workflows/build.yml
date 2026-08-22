@@ -46,7 +46,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Qalam-IDE
-          ref: 2ba4301a62beb0c77bd6a0cd99710333053f999e
+          ref: 69898a777ac4957f8615c9ddd62f75e17e2dc721
           path: Qalam-IDE
 
       - name: Check out Baa-LSP
