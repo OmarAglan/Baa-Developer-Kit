@@ -260,7 +260,9 @@ try {
         $entryPoint = -join [char[]](
             0x0627, 0x0644, 0x0631, 0x0626, 0x064A, 0x0633, 0x064A, 0x0629)
         $returnKeyword = -join [char[]](0x0625, 0x0631, 0x062C, 0x0639)
-        $source = Join-Path $sourceDirectory (($kitName -replace ' ', '-') + '.baa')
+        $baaExtension = -join [char[]](0x0628, 0x0627, 0x0621)
+        $source = Join-Path $sourceDirectory (
+            ($kitName -replace ' ', '-') + '.' + $baaExtension)
         $program = Join-Path $sourceDirectory (($kitName -replace ' ', '-') + '.exe')
         [IO.File]::WriteAllText(
             $source,
@@ -320,6 +322,44 @@ try {
         & $nazmProgram
         if ($LASTEXITCODE -ne 0) {
             throw 'Executable built from the direct Nazm source failed to run.'
+        }
+
+        $mixedProject = Join-Path $sourceDirectory 'mixed-takween'
+        $mixedSource = Join-Path $mixedProject 'src'
+        [IO.Directory]::CreateDirectory($mixedSource) | Out-Null
+        $projectManifestName = (-join [char[]](
+            0x0645, 0x0634, 0x0631, 0x0648, 0x0639)) + '.' +
+            (-join [char[]](0x062A, 0x0643, 0x0648, 0x064A, 0x0646))
+        $mixedFiles = [ordered]@{
+            (Join-Path $mixedProject $projectManifestName) =
+                'W9in2YTZhdi02LHZiNi5XQrYp9mE2KfYs9mFID0gItmF2K7YqtmE2Ldf2YbYuNmFIgrYp9mE2KXYtdiv2KfYsSA9ICIxLjAuMCIK2KXYtdiv2KfYsV/YqNin2KEgPSAiPj0wLjYuMCA8MC43LjAiCgpb2KfZhNij2YfYr9in2YEu2KjYsdmG2KfZhdisX9mG2LjZhV0K2KfZhNmG2YjYuSA9ICLYqtmG2YHZitiw2YoiCtin2YTZhdiv2K7ZhCA9ICJzcmMvbWFpbi7YqNin2KEiCtin2YTZhdi12KfYr9ixID0gWyJzcmMvaGVscGVyLtmG2LjZhSJdCgpb2KfZhNio2YbYp9ihXQrYp9mE2YXYrtix2KwgPSAiYnVpbGQiCtin2YTZhtmF2LcgPSAi2KrYt9mI2YrYsSIK2KfZhNmF2KzZhdi5ID0gItmG2LjZhSIKClvYp9mE2KPZhtmF2KfYty7Yqti32YjZitixXQrYp9mE2KrYrdiz2YrZhiA9IDEK2KfZhNiq2K3ZgtmCID0g2K7Yt9ijCg=='
+            (Join-Path $mixedSource ('main.' + $baaExtension)) =
+                '2K7Yp9ix2KzZiiDYtdit2YrYrSDZgtmK2YXYqV/Zhti42YUoKS4KCti12K3ZititINin2YTYsdim2YrYs9mK2KkoKSB7CiAgICDYpdix2KzYuSDZgtmK2YXYqV/Zhti42YUoKSAtINmnLgp9Cg=='
+            (Join-Path $mixedSource ('helper.' + $nazmName)) =
+                'LtmG2LUKLti52KfZhSDZgtmK2YXYqV/Zhti42YUK2YLZitmF2Klf2YbYuNmFOgogICAg2KfZhtmC2YQg2LPYrNmEX9in2YTZhdix2YPZhV/Zo9mi2Iwg2acKICAgINin2LHYrNi5Cg=='
+        }
+        foreach ($mixedFile in $mixedFiles.GetEnumerator()) {
+            [IO.File]::WriteAllBytes(
+                $mixedFile.Key, [Convert]::FromBase64String($mixedFile.Value))
+        }
+        Push-Location $mixedProject
+        try {
+            & $takweenExecutable build
+            if ($LASTEXITCODE -ne 0) {
+                throw 'Installed Takween mixed Baa/Nazm build failed.'
+            }
+            & $takweenExecutable run
+            if ($LASTEXITCODE -ne 0) {
+                throw 'Installed Takween mixed Baa/Nazm run failed.'
+            }
+            & $takweenExecutable clean
+            if ($LASTEXITCODE -ne 0 -or
+                (Test-Path -LiteralPath (Join-Path $mixedProject 'build'))) {
+                throw 'Installed Takween mixed-project cleanup failed.'
+            }
+        }
+        finally {
+            Pop-Location
         }
         Test-QalamWindow $qalamExecutable
     }

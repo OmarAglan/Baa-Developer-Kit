@@ -25,35 +25,35 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Nazm
-          ref: 9a7c4d4d36524385d9526d45d8501d157a67d258
+          ref: bbf60d324f955948487835366546ed3eaa595150
           path: Nazm
 
       - name: Check out Baa
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Baa
-          ref: f8775088f499837206db31e6105e6f845a40e698
+          ref: a6b0ecfc1bc021aa6354c738b2fcc6014dd448fd
           path: Baa
 
       - name: Check out Takween
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Takween
-          ref: 6e54df4847e49ea6e769128c0941c60851a3daf9
+          ref: 5f50e8a69f766310a32459349f8238ad437c2dc8
           path: Takween
 
       - name: Check out Qalam
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Qalam-IDE
-          ref: 69898a777ac4957f8615c9ddd62f75e17e2dc721
+          ref: 97c01093912450b0cee98eb5c89828130790029c
           path: Qalam-IDE
 
       - name: Check out Baa-LSP
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Baa-LSP
-          ref: 162ef31afd6decf1fdce23f3352d948ca2240122
+          ref: 7e4d6c7d8c4a01fcd68a052f5e1a02f0168ea4ef
           path: Baa-LSP
 
       - uses: actions/setup-python@v5
@@ -115,9 +115,14 @@ jobs:
         run: ./scripts/Build-DeveloperKitInstaller.ps1
 
       - name: Verify isolated install, repair, runtime, and uninstall
-        shell: pwsh
+        shell: powershell
         working-directory: Baa-Developer-Kit
         run: ./scripts/Test-DeveloperKitInstaller.ps1
+
+      - name: Verify default Program Files and machine PATH lifecycle
+        shell: powershell
+        working-directory: Baa-Developer-Kit
+        run: ./scripts/Test-DeveloperKitAllUsers.ps1
 
       - name: Upload versioned installer set
         uses: actions/upload-artifact@v4
