@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Baa
-          ref: a6b0ecfc1bc021aa6354c738b2fcc6014dd448fd
+          ref: 3994077688144f301493463528951c8fcce788d0
           path: Baa
 
       - name: Check out Takween
@@ -46,14 +46,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Qalam-IDE
-          ref: 97c01093912450b0cee98eb5c89828130790029c
+          ref: ef0cb8e11807b9cc4b65f73acb0c4996cda91e25
           path: Qalam-IDE
 
       - name: Check out Baa-LSP
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Baa-LSP
-          ref: 7e4d6c7d8c4a01fcd68a052f5e1a02f0168ea4ef
+          ref: ce0549e15b2b7fb740c11047fd699ad6600c5a9a
           path: Baa-LSP
 
       - uses: actions/setup-python@v5
