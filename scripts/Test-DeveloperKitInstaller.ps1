@@ -235,6 +235,13 @@ try {
         $env:PATH = "$nazmBin;$baaDirectory;$takweenBin;$env:SystemRoot\System32;$env:SystemRoot"
         $env:BAA_HOME = $baaDirectory
         $env:BAA_STDLIB = Join-Path $baaDirectory 'stdlib'
+        foreach ($externalTool in @('gcc.exe', 'ld.exe', 'cmake.exe',
+                                    'python.exe')) {
+            if (Get-Command $externalTool -CommandType Application `
+                    -ErrorAction SilentlyContinue) {
+                throw "External developer tool remained visible: $externalTool"
+            }
+        }
         $sourceDirectory = Join-Path $componentRoot ($kitName + ' source')
         [IO.Directory]::CreateDirectory($sourceDirectory) | Out-Null
         $integerKeyword = -join [char[]](0x0635, 0x062D, 0x064A, 0x062D)

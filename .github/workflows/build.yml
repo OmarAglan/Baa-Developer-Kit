@@ -1,0 +1,138 @@
+name: Build Baa Developer Kit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-installer:
+    name: Isolated Windows installer lifecycle
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out Developer Kit
+        uses: actions/checkout@v4
+        with:
+          path: Baa-Developer-Kit
+
+      - name: Check out Nazm
+        uses: actions/checkout@v4
+        with:
+          repository: OmarAglan/Nazm
+          ref: 9a7c4d4d36524385d9526d45d8501d157a67d258
+          path: Nazm
+
+      - name: Check out Baa
+        uses: actions/checkout@v4
+        with:
+          repository: OmarAglan/Baa
+          ref: 3919bc2d8c53b8ecb87d146d2563e99f91e7a091
+          path: Baa
+
+      - name: Check out Takween
+        uses: actions/checkout@v4
+        with:
+          repository: OmarAglan/Takween
+          ref: c5b315c9b55eaac8e971f1c9c4251bb1c081dd5c
+          path: Takween
+
+      - name: Check out Qalam
+        uses: actions/checkout@v4
+        with:
+          repository: OmarAglan/Qalam-IDE
+          ref: 07faad716574156df16792629ae466ec7c5b7382
+          path: Qalam-IDE
+
+      - name: Check out Baa-LSP
+        uses: actions/checkout@v4
+        with:
+          repository: OmarAglan/Baa-LSP
+          ref: 162ef31afd6decf1fdce23f3352d948ca2240122
+          path: Baa-LSP
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Add Windows MinGW toolchain
+        shell: pwsh
+        run: |
+          'C:\msys64\ucrt64\bin' | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Build Nazm installer
+        shell: pwsh
+        run: ./Nazm/scripts/build_installer.ps1
+
+      - name: Prepare Baa private linker
+        shell: pwsh
+        run: ./Baa/scripts/prepare_gcc_bundle.ps1
+
+      - name: Build Baa installer
+        shell: pwsh
+        run: |
+          ./Baa/scripts/build_installer.ps1 `
+            -NazmExecutable "$env:GITHUB_WORKSPACE\Nazm\build\windows-release\nazm.exe"
+
+      - name: Build Takween installer
+        shell: pwsh
+        run: |
+          ./Takween/scripts/build_installer.ps1 `
+            -BaaPath "$env:GITHUB_WORKSPACE\Baa\build\baa.exe" `
+            -BaaStdlibPath "$env:GITHUB_WORKSPACE\Baa\stdlib" `
+            -NazmPath "$env:GITHUB_WORKSPACE\Nazm\build\windows-release\nazm.exe"
+
+      - name: Build Qalam and Baa-LSP
+        shell: pwsh
+        run: |
+          ./Qalam-IDE/scripts/bootstrap-windows.ps1 `
+            -SkipWinget `
+            -BuildTests `
+            -SkipCompiler `
+            -BaaLspSourceDir "$env:GITHUB_WORKSPACE\Baa-LSP"
+
+      - name: Build Qalam installer
+        shell: pwsh
+        run: |
+          ./Qalam-IDE/scripts/build_installer.ps1 `
+            -Version 3.3.0 `
+            -BuildDir build/windows-release `
+            -BaaLspExecutable "$env:GITHUB_WORKSPACE\Baa-LSP\build\windows-release\baa-lsp.exe" `
+            -SkipBuild
+
+      - name: Build offline Developer Kit
+        shell: pwsh
+        working-directory: Baa-Developer-Kit
+        run: ./scripts/Build-DeveloperKitInstaller.ps1
+
+      - name: Verify isolated install, repair, runtime, and uninstall
+        shell: pwsh
+        working-directory: Baa-Developer-Kit
+        run: ./scripts/Test-DeveloperKitInstaller.ps1
+
+      - name: Upload versioned installer set
+        uses: actions/upload-artifact@v4
+        with:
+          name: baa-developer-kit-0.1.0-x64
+          if-no-files-found: error
+          path: |
+            Nazm/dist/installer/nazm-setup-0.4.0-x64.exe
+            Nazm/dist/installer/nazm-setup-0.4.0-x64.exe.sha256
+            Baa/dist/installer/baa-setup-0.6.0-x64.exe
+            Baa/dist/installer/baa-setup-0.6.0-x64.exe.sha256
+            Takween/dist/installer/takween-setup-0.1.0-x64.exe
+            Takween/dist/installer/takween-setup-0.1.0-x64.exe.sha256
+            Qalam-IDE/dist/installer/qalam-setup-3.3.0-x64.exe
+            Qalam-IDE/dist/installer/qalam-setup-3.3.0-x64.exe.sha256
+            Baa-Developer-Kit/dist/eco-installer-manifest-v1.json
+            Baa-Developer-Kit/dist/installer/baa-developer-kit-setup-0.1.0-x64.exe
+            Baa-Developer-Kit/dist/installer/baa-developer-kit-setup-0.1.0-x64.exe.sha256
