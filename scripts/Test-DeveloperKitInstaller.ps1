@@ -138,8 +138,20 @@ public static class DeveloperKitWindowProbe
 }
 '@
     }
-    $script:qalamProcess = Start-Process -FilePath $Executable `
-        -WindowStyle Hidden -PassThru
+    $runtimeTemp = Join-Path $componentRoot 'qalam-runtime-temp'
+    [IO.Directory]::CreateDirectory($runtimeTemp) | Out-Null
+    $previousTemp = $env:TEMP
+    $previousTmp = $env:TMP
+    try {
+        $env:TEMP = $runtimeTemp
+        $env:TMP = $runtimeTemp
+        $script:qalamProcess = Start-Process -FilePath $Executable `
+            -WindowStyle Hidden -PassThru
+    }
+    finally {
+        $env:TEMP = $previousTemp
+        $env:TMP = $previousTmp
+    }
     $deadline = [DateTime]::UtcNow.AddSeconds(10)
     do {
         Start-Sleep -Milliseconds 100
@@ -262,6 +274,52 @@ try {
         & $program
         if ($LASTEXITCODE -ne 0) {
             throw 'Program built by the installed ecosystem failed to run.'
+        }
+
+        $nazmSource = Join-Path $sourceDirectory (
+            $nazmName + '.' + $nazmName)
+        $nazmObject = Join-Path $sourceDirectory ($nazmName + '.obj')
+        $nazmProgram = Join-Path $sourceDirectory ($nazmName + '.exe')
+        $textSection = '.' + (-join [char[]](0x0646, 0x0635))
+        $globalDirective = '.' +
+            (-join [char[]](0x0639, 0x0627, 0x0645))
+        $mainSymbol = -join [char[]](
+            0x0627, 0x0644, 0x0631, 0x0626, 0x064A, 0x0633, 0x064A,
+            0x0629)
+        $moveInstruction = -join [char[]](
+            0x0627, 0x0646, 0x0642, 0x0644)
+        $returnInstruction = -join [char[]](
+            0x0627, 0x0631, 0x062C, 0x0639)
+        $accumulator32 = -join [char[]](
+            0x0633, 0x062C, 0x0644, 0x005F, 0x0627, 0x0644, 0x0645,
+            0x0631, 0x0643, 0x0645, 0x005F, 0x0663, 0x0662)
+        $arabicComma = [char]0x060C
+        $nazmText = "$textSection`n$globalDirective $mainSymbol`n" +
+            "${mainSymbol}:`n" +
+            "    $moveInstruction $accumulator32$arabicComma $([char]0x0660)`n" +
+            "    $returnInstruction`n"
+        [IO.File]::WriteAllText(
+            $nazmSource, $nazmText, [Text.UTF8Encoding]::new($false))
+        $outputOption = '--' +
+            (-join [char[]](0x062E, 0x0631, 0x062C))
+        $formatOption = '--' +
+            (-join [char[]](0x0635, 0x064A, 0x063A, 0x0629))
+        $coffFormat = -join [char[]](0x0643, 0x0648, 0x0641)
+        & $nazmExecutable $nazmSource $outputOption $nazmObject `
+            $formatOption $coffFormat
+        if ($LASTEXITCODE -ne 0 -or
+            !(Test-Path -LiteralPath $nazmObject -PathType Leaf)) {
+            throw 'Installed Nazm direct assembly workflow failed.'
+        }
+        & $baaExecutable $nazmSource "--nazm-path=$nazmExecutable" `
+            -o $nazmProgram
+        if ($LASTEXITCODE -ne 0 -or
+            !(Test-Path -LiteralPath $nazmProgram -PathType Leaf)) {
+            throw 'Installed Baa direct Nazm executable workflow failed.'
+        }
+        & $nazmProgram
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Executable built from the direct Nazm source failed to run.'
         }
         Test-QalamWindow $qalamExecutable
     }
