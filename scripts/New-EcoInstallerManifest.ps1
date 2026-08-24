@@ -3,11 +3,12 @@ param(
     [Parameter(Mandatory)] [string]$BaaInstaller,
     [Parameter(Mandatory)] [string]$TakweenInstaller,
     [Parameter(Mandatory)] [string]$QalamInstaller,
-    [string]$ReleaseVersion = "0.1.0",
+    [string]$ReleaseVersion = "0.2.0",
     [string]$NazmVersion = "0.4.0",
     [string]$BaaVersion = "0.6.0",
     [string]$TakweenVersion = "0.1.0",
     [string]$QalamVersion = "3.3.0",
+    [string]$BaaLspVersion = "0.1.0",
     [string]$OutputPath = ""
 )
 
@@ -74,12 +75,27 @@ $components = @(
         "baa-lsp\baa-lsp.exe" @("--version")
 )
 
+$bundledPrograms = @(
+    [ordered]@{
+        id = "baa-lsp"
+        display_name = "خادم لغة باء"
+        version = $BaaLspVersion
+        owner_component = "qalam"
+        program = "baa-lsp\baa-lsp.exe"
+        health_check = [ordered]@{
+            arguments = @("--version")
+            expected_exit_code = 0
+        }
+    }
+)
+
 $manifest = [ordered]@{
     schema_version = "eco-installer-manifest-v1"
     release_version = $ReleaseVersion
     target = "x86_64-windows"
     generated_at_utc = [DateTime]::UtcNow.ToString("o")
     components = $components
+    bundled_programs = $bundledPrograms
 }
 
 $outputDirectory = Split-Path -Parent $OutputPath

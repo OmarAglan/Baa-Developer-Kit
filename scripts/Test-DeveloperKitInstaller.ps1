@@ -1,6 +1,7 @@
 param(
-    [string]$ReleaseVersion = '0.1.0',
-    [string]$Installer = ''
+    [string]$ReleaseVersion = '0.2.0',
+    [string]$Installer = '',
+    [string]$PreviousInstaller = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -10,21 +11,30 @@ if ([string]::IsNullOrWhiteSpace($Installer)) {
         "dist\installer\baa-developer-kit-setup-$ReleaseVersion-x64.exe")
 }
 $Installer = (Resolve-Path -LiteralPath $Installer).Path
-$checksumPath = $Installer + '.sha256'
-if (!(Test-Path -LiteralPath $checksumPath -PathType Leaf)) {
-    throw "Developer Kit checksum is missing: $checksumPath"
+
+function Assert-InstallerChecksum {
+    param([string]$Path)
+    $checksumPath = $Path + '.sha256'
+    if (!(Test-Path -LiteralPath $checksumPath -PathType Leaf)) {
+        throw "Developer Kit checksum is missing: $checksumPath"
+    }
+    $checksumLine = [IO.File]::ReadAllText(
+        $checksumPath, [Text.Encoding]::ASCII).Trim()
+    if ($checksumLine -notmatch '^([0-9A-Fa-f]{64}) \*(.+)$') {
+        throw 'Developer Kit checksum file has an invalid format.'
+    }
+    if ($Matches[2] -cne [IO.Path]::GetFileName($Path)) {
+        throw 'Developer Kit checksum names the wrong file.'
+    }
+    $actualHash = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
+    if ($Matches[1] -ine $actualHash) {
+        throw 'Developer Kit SHA-256 verification failed.'
+    }
 }
-$checksumLine = [IO.File]::ReadAllText(
-    $checksumPath, [Text.Encoding]::ASCII).Trim()
-if ($checksumLine -notmatch '^([0-9A-Fa-f]{64}) \*(.+)$') {
-    throw 'Developer Kit checksum file has an invalid format.'
-}
-if ($Matches[2] -cne [IO.Path]::GetFileName($Installer)) {
-    throw 'Developer Kit checksum names the wrong file.'
-}
-$actualHash = (Get-FileHash -LiteralPath $Installer -Algorithm SHA256).Hash
-if ($Matches[1] -ine $actualHash) {
-    throw 'Developer Kit SHA-256 verification failed.'
+Assert-InstallerChecksum $Installer
+if (![string]::IsNullOrWhiteSpace($PreviousInstaller)) {
+    $PreviousInstaller = (Resolve-Path -LiteralPath $PreviousInstaller).Path
+    Assert-InstallerChecksum $PreviousInstaller
 }
 
 $uninstallKeys = [ordered]@{
@@ -95,13 +105,17 @@ function Wait-State {
 }
 
 function Invoke-DeveloperKit {
+    param([string]$Executable = '')
+    if ([string]::IsNullOrWhiteSpace($Executable)) {
+        $Executable = $Installer
+    }
     $arguments = @(
         '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-',
         '/CURRENTUSER',
         "/COMPONENTROOT=`"$componentRoot`"",
         "/LOG=`"$setupLog`""
     )
-    $process = Start-Process -FilePath $Installer -ArgumentList $arguments `
+    $process = Start-Process -FilePath $Executable -ArgumentList $arguments `
         -WindowStyle Hidden -Wait -PassThru
     if ($process.ExitCode -ne 0) {
         throw "Developer Kit failed with exit code $($process.ExitCode). Log: $setupLog"
@@ -198,7 +212,31 @@ function Uninstall-Components {
 }
 
 try {
+    $previousProgramHashes = @{}
+    if (![string]::IsNullOrWhiteSpace($PreviousInstaller)) {
+        Invoke-DeveloperKit $PreviousInstaller
+        $installed = $true
+        $upgradePrograms = [ordered]@{
+            baa = Join-Path $componentDirectories.baa 'baa.exe'
+            qalam = Join-Path $componentDirectories.qalam 'Qalam.exe'
+        }
+        foreach ($entry in $upgradePrograms.GetEnumerator()) {
+            if (!(Test-Path -LiteralPath $entry.Value -PathType Leaf)) {
+                throw "Previous installation is missing $($entry.Key): $($entry.Value)"
+            }
+            $previousProgramHashes[$entry.Key] =
+                (Get-FileHash -LiteralPath $entry.Value -Algorithm SHA256).Hash
+        }
+    }
     Invoke-DeveloperKit
+    foreach ($entry in $previousProgramHashes.GetEnumerator()) {
+        $program = $upgradePrograms[$entry.Key]
+        $currentHash =
+            (Get-FileHash -LiteralPath $program -Algorithm SHA256).Hash
+        if ($currentHash -ieq $entry.Value) {
+            throw "Upgrade did not replace $($entry.Key): $program"
+        }
+    }
     $installed = $true
     Invoke-DeveloperKit
 

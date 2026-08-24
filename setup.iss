@@ -5,7 +5,7 @@
 #define MyAppId "{{713E6720-D44C-4B1E-BFAB-43274018264F}"
 #define MyAppName "عدة تطوير باء"
 #ifndef MyAppVersion
-  #define MyAppVersion "0.1.0"
+  #define MyAppVersion "0.2.0"
 #endif
 #ifndef NazmInstallerPath
   #error NazmInstallerPath is required

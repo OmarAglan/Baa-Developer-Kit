@@ -1,5 +1,5 @@
 param(
-    [string]$ReleaseVersion = '0.1.0',
+    [string]$ReleaseVersion = '0.2.0',
     [string]$NazmInstaller = '..\Nazm\dist\installer\nazm-setup-0.4.0-x64.exe',
     [string]$BaaInstaller = '..\Baa\dist\installer\baa-setup-0.6.0-x64.exe',
     [string]$TakweenInstaller = '..\Takween\dist\installer\takween-setup-0.1.0-x64.exe',
@@ -52,6 +52,13 @@ $manifestPath = Join-Path $root 'dist\eco-installer-manifest-v1.json'
 
 $manifest = Get-Content -LiteralPath $manifestPath -Raw |
     ConvertFrom-Json
+$bundledPrograms = @($manifest.bundled_programs)
+if ($bundledPrograms.Count -ne 1 -or
+    $bundledPrograms[0].id -cne 'baa-lsp' -or
+    $bundledPrograms[0].owner_component -cne 'qalam' -or
+    $bundledPrograms[0].program -cne 'baa-lsp\baa-lsp.exe') {
+    throw 'Installer manifest must record Baa-LSP as a Qalam-owned program.'
+}
 $hashes = @{}
 foreach ($component in $manifest.components) {
     $hashes[$component.id] = $component.sha256
@@ -115,9 +122,24 @@ if (!(Test-Path -LiteralPath $installer -PathType Leaf)) {
     throw "Developer Kit installer was not produced: $installer"
 }
 $hash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash
+$checksum = "$installer.sha256"
 [IO.File]::WriteAllText(
-    "$installer.sha256",
+    $checksum,
     "$hash *$([IO.Path]::GetFileName($installer))`n",
     [Text.Encoding]::ASCII)
+$archive = [IO.Path]::ChangeExtension($installer, '.zip')
+if (Test-Path -LiteralPath $archive) {
+    Remove-Item -LiteralPath $archive -Force
+}
+Compress-Archive -LiteralPath @($installer, $checksum) `
+    -DestinationPath $archive -CompressionLevel Optimal
+$archiveHash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash
+$archiveChecksum = "$archive.sha256"
+[IO.File]::WriteAllText(
+    $archiveChecksum,
+    "$archiveHash *$([IO.Path]::GetFileName($archive))`n",
+    [Text.Encoding]::ASCII)
 Write-Output $installer
-Write-Output "$installer.sha256"
+Write-Output $checksum
+Write-Output $archive
+Write-Output $archiveChecksum
