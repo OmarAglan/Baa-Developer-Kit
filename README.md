@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/branding/developer-kit-master-v1.png" width="144" alt="شعار عدة تطوير باء">
+</p>
+
 # عدة تطوير باء
 
 هذا المستودع يملك المثبت الشامل غير المتصل بالإنترنت لمنظومة باء على Windows.
@@ -9,14 +13,14 @@
 | نظم | 0.4.0 | مثبت مستقل وأمر عام على `PATH` |
 | باء | 0.6.0 | مثبت مستقل وأمر عام على `PATH` مع رابطه الخاص |
 | تكوين | 0.1.0 | مثبت مستقل وأمر عام على `PATH` |
-| قلم | 3.3.0 | مثبت IDE مستقل بلا تعديل `PATH` |
+| قلم | 3.4.0 | مثبت IDE مستقل بلا تعديل `PATH` |
 | Baa-LSP | 0.1.0 | برنامج كامل مملوك لحزمة قلم ومتحقق منه منفردًا |
 
 يبقى لكل مكوّن مثبت وإصدار وإزالة مستقلة. يضيف نظم وباء وتكوين أوامرها العامة
 فقط إلى `PATH`، بينما لا يضيف قلم أو Baa-LSP أي مسار عام.
 
 أصبح ArbSh عضوًا رسميًا في Eco بوصفه الصدفة والطرفية العربية، لكنه غير داخل
-عدة 0.2.0 بعد. سيضاف عبر مثبته المستقل فقط بعد تجميد `arbsh-host-v1` واجتياز
+عدة 0.3.0 بعد. سيضاف عبر مثبته المستقل فقط بعد تجميد `arbsh-host-v1` واجتياز
 اختبارات Windows/Linux ودورة التثبيت والترقية والإصلاح والإزالة؛ ولن تنتقل
 ملكية ملفاته إلى المثبت الشامل. يبقى Pyramid-Engine وPyramidOS أحمالًا اختيارية
 منفصلة، لا مكونات افتراضية في عدة اللغة.
@@ -41,10 +45,10 @@
 
 الناتج هو:
 
-- `dist/installer/baa-developer-kit-setup-0.2.0-x64.exe`
-- `dist/installer/baa-developer-kit-setup-0.2.0-x64.exe.sha256`
-- `dist/installer/baa-developer-kit-setup-0.2.0-x64.zip`
-- `dist/installer/baa-developer-kit-setup-0.2.0-x64.zip.sha256`
+- `dist/installer/baa-developer-kit-setup-0.3.0-x64.exe`
+- `dist/installer/baa-developer-kit-setup-0.3.0-x64.exe.sha256`
+- `dist/installer/baa-developer-kit-setup-0.3.0-x64.zip`
+- `dist/installer/baa-developer-kit-setup-0.3.0-x64.zip.sha256`
 - `dist/eco-installer-manifest-v1.json`
 
 لا يقبل البناء ملفًا مفقودًا أو اسمًا غير مطابق أو ملف SHA-256 غير صالح. ويمكن
@@ -89,7 +93,7 @@ Inno Setup:
 ## التشغيل الصامت
 
 ```powershell
-.\baa-developer-kit-setup-0.2.0-x64.exe `
+.\baa-developer-kit-setup-0.3.0-x64.exe `
   /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /ALLUSERS
 ```
 

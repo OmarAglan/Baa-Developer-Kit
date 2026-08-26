@@ -1,7 +1,7 @@
 # حالة التحقق من عدة تطوير باء
 
-**التاريخ:** 2026-08-24
-**الإصدار المرشح:** 0.2.0
+**التاريخ:** 2026-08-26
+**الإصدار المرشح:** 0.3.0
 
 توثق هذه الصفحة الفرق بين ما ثبت آليا وما يزال بوابة إصدار خارجية. لا تعني
 نجاح الفحص المحلي أن الحزمة أصبحت إصدارا عاما موقّعا.
@@ -50,12 +50,12 @@
 
 | الملف | SHA-256 |
 |---|---|
-| `nazm-setup-0.4.0-x64.exe` | `35150B3F3B0FE7CD96FD4504C9F1C89F20DF7652D1629B64A8F3B855C19583C9` |
-| `baa-setup-0.6.0-x64.exe` | `A0AE501B2755943538F6AF93472FB9C201C0752D12B9F73B36FFF53614459019` |
-| `takween-setup-0.1.0-x64.exe` | `483B85A74FA49FA6B6F8246E9EFB626996C6A83ADBAC41478CEC6BE866D50A0B` |
-| `qalam-setup-3.3.0-x64.exe` | `A36FD0BAAA920BF6EFD900C6F5DACAC020CDD6429BB9844FF69EC06E697EAC6E` |
-| `baa-developer-kit-setup-0.2.0-x64.exe` | `DC8069A59C19C557AA7EBDA881BD4B8E6B0B412DCECBD91F3BE6DC3D7107DF86` |
-| `baa-developer-kit-setup-0.2.0-x64.zip` | `53F1C79F5D9D9BB2E16689B111A2ED284ACB215AA513137DBEDA3C490902D8F9` |
+| `nazm-setup-0.4.0-x64.exe` | `673B053D75BE268F0DA018B45B3E3FC8AE9078A40C5BFB14D118C0A259EF4D62` |
+| `baa-setup-0.6.0-x64.exe` | `5827F2D11C18FF0AD5543494C875FFB9DE6947C7E3C0256BDF457DB87EAB9085` |
+| `takween-setup-0.1.0-x64.exe` | `F6B650C894152728B808A4CC146D82DB0F59379F335C3E3EC89E882397ACFE5B` |
+| `qalam-setup-3.4.0-x64.exe` | `A6C722334C3FF7EFA3F02285B137AD1827ACD08469CACAE761428C3C812D6728` |
+| `baa-developer-kit-setup-0.3.0-x64.exe` | `F6DC0E3DB4F47589D21E1460EF2BDC4501437E2D8DFDAF5426C661EEDB9C6A02` |
+| `baa-developer-kit-setup-0.3.0-x64.zip` | `8014721C395C842D513A5216E47999AAF99CB163ED4D267C480405E3A6883A29` |
 
 هذه القيم تخص البناء المحلي الحالي فقط. يجب نشر ملفات `.sha256` الناتجة مع
 نفس البايتات المنشورة، ويجب أخذ قيم إصدار CI من أثر العمل نفسه.
