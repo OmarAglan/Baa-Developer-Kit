@@ -1,5 +1,5 @@
 param(
-    [string]$ReleaseVersion = '0.3.0',
+    [string]$ReleaseVersion = '0.4.0',
     [string]$Installer = '',
     [string]$PreviousInstaller = ''
 )
