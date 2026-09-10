@@ -1,11 +1,11 @@
-; Offline bootstrapper for the Baa development ecosystem.
+﻿; Offline bootstrapper for the Baa development ecosystem.
 ; It owns no component files: each embedded installer keeps its own AppId,
 ; files, environment entries, upgrade behavior, and uninstaller.
 
 #define MyAppId "{{713E6720-D44C-4B1E-BFAB-43274018264F}"
 #define MyAppName "عدة تطوير باء"
 #ifndef MyAppVersion
-  #define MyAppVersion "0.4.0"
+  #define MyAppVersion "0.5.0"
 #endif
 #ifndef NazmInstallerPath
   #error NazmInstallerPath is required
@@ -58,6 +58,13 @@ OutputBaseFilename=baa-developer-kit-setup-{#MyAppVersion}-x64
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
+WizardSizePercent=110,110
+DisableWelcomePage=no
+WizardImageFile=installer\wizard-sidebar.png
+WizardSmallImageFile=installer\wizard-mark.png
+WizardImageStretch=yes
+LZMANumBlockThreads=1
+CompressionThreads=1
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
@@ -72,6 +79,17 @@ UsePreviousLanguage=yes
 SignTool={#InstallerSignTool}
 #endif
 
+[LangOptions]
+DialogFontName=Segoe UI
+DialogFontSize=10
+WelcomeFontName=Segoe UI
+
+[Messages]
+arabic.WelcomeLabel1=أدواتك. جاهزة معاً.
+arabic.WelcomeLabel2=كل ما تحتاجه للبدء في منظومة باء، في حزمة واحدة تعمل دون تنزيلات إضافية.%n%nنظم — تجميع البرامج%nباء — المترجم والمكتبة القياسية%nتكوين — إدارة المشاريع والبناء%nقلم 3.6 — المحرر وخادم لغة باء%n%nسيثبّت المعالج الأدوات بالترتيب ويتحقق من جاهزيتها.
+english.WelcomeLabel1=Your tools. Ready together.
+english.WelcomeLabel2=Start developing in the Baa ecosystem with one offline package.%n%nNazm — assembler%nBaa — compiler and standard library%nTakween — projects and builds%nQalam 3.6 — editor and Baa language server%n%nSetup installs each tool in order and checks that it is ready.
+
 [Languages]
 Name: "arabic"; MessagesFile: "compiler:Languages\Arabic.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -84,6 +102,7 @@ Source: "{#QalamInstallerPath}"; Flags: dontcopy
 Source: "{#InstallerManifestPath}"; Flags: dontcopy
 
 [Code]
+#include "installer\windows_wizard.iss"
 const
   NazmHash = '{#NazmSha256}';
   BaaHash = '{#BaaSha256}';
@@ -98,6 +117,7 @@ var
   ReceiptDirectory: string;
   ReceiptStem: string;
   ReceiptPath: string;
+  ComponentIndex: Integer;
 
 function InstallerRoot: Integer;
 begin
@@ -107,13 +127,35 @@ begin
     Result := HKCU;
 end;
 
-procedure WriteReceipt(const Message: string);
+function UpdateReadyMemo(Space, NewLine, MemoUserInfoInfo, MemoDirInfo,
+  MemoTypeInfo, MemoComponentsInfo, MemoGroupInfo, MemoTasksInfo: string): string;
+var
+  Scope: string;
 begin
-  Log(Message);
+  if IsAdminInstallMode then Scope := EcoText('جميع المستخدمين', 'All users')
+  else Scope := EcoText('المستخدم الحالي', 'Current user');
+  Result := EcoText('عدة تطوير باء ', 'Baa Developer Kit ') + '{#MyAppVersion}' +
+    NewLine + NewLine + EcoText('نطاق التثبيت: ', 'Install scope: ') + Scope +
+    NewLine + NewLine + EcoText('الأدوات التي ستُثبت بالترتيب:', 'Tools installed in order:') +
+    NewLine + Space + EcoText('نظم 0.4.0', 'Nazm 0.4.0') +
+    NewLine + Space + EcoText('باء 0.6.0', 'Baa 0.6.0') +
+    NewLine + Space + EcoText('تكوين 0.1.0', 'Takween 0.1.0') +
+    NewLine + Space + EcoText('قلم 3.6.0 وخادم لغة باء 0.1.0', 'Qalam 3.6.0 and Baa-LSP 0.1.0') +
+    NewLine + NewLine + EcoText('تعمل الحزمة دون تنزيلات إضافية. لكل أداة إزالة مستقلة.',
+      'No additional downloads. Each tool has its own uninstaller.');
+end;
+
+procedure WriteReceipt(const Message: string);
+var
+  Lines: TArrayOfString;
+begin
+  EcoWizardLog('info', Message);
   if ReceiptPath <> '' then
-    SaveStringToFile(ReceiptPath,
-      GetDateTimeString('yyyy-mm-dd hh:nn:ss', '-', ':') + ' ' + Message + #13#10,
-      True);
+  begin
+    SetArrayLength(Lines, 1);
+    Lines[0] := GetDateTimeString('yyyy-mm-dd hh:nn:ss', '-', ':') + ' ' + Message;
+    SaveStringsToUTF8File(ReceiptPath, Lines, True);
+  end;
 end;
 
 procedure InitializeReceipt;
@@ -126,7 +168,8 @@ begin
   ReceiptStem := GetDateTimeString('yyyymmdd-hhnnss', '-', ':') +
     '-baa-developer-kit-{#MyAppVersion}';
   ReceiptPath := AddBackslash(ReceiptDirectory) + ReceiptStem + '.log';
-  WriteReceipt('Starting Baa Developer Kit installation.');
+  EcoDetailLogPath := ReceiptPath;
+  WriteReceipt(EcoText('بدء تثبيت عدة تطوير باء.', 'Starting Baa Developer Kit installation.'));
 end;
 
 function VerifyInstaller(const FileName, ExpectedHash: string): Boolean;
@@ -138,7 +181,7 @@ begin
   ActualHash := Lowercase(GetSHA256OfFile(FullPath));
   Result := ActualHash = Lowercase(ExpectedHash);
   if Result then
-    WriteReceipt('Verified SHA-256: ' + FileName)
+    WriteReceipt(EcoText('تم التحقق من سلامة: ', 'Integrity verified: ') + FileName)
   else
     WriteReceipt('SHA-256 mismatch: ' + FileName + ' expected=' +
       ExpectedHash + ' actual=' + ActualHash);
@@ -180,7 +223,7 @@ begin
   end;
 end;
 
-function RunComponent(const ComponentId, FileName: string): Boolean;
+function RunComponent(const ComponentId, DisplayName, FileName: string): Boolean;
 var
   Arguments, ScopeArgument, ChildLog: string;
   ExitCode: Integer;
@@ -192,17 +235,33 @@ begin
   ChildLog := AddBackslash(ReceiptDirectory) + ReceiptStem + '-' +
     ComponentId + '.log';
   Arguments := '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- ' +
-    ScopeArgument + ComponentDirectoryArgument(ComponentId) +
+    ScopeArgument + ' /LANG=' + ActiveLanguage + ComponentDirectoryArgument(ComponentId) +
     ' /LOG="' + ChildLog + '"';
-  WriteReceipt('Installing ' + ComponentId + '.');
+  ComponentIndex := ComponentIndex + 1;
+  WizardForm.ProgressGauge.Max := 4;
+  WizardForm.ProgressGauge.Position := ComponentIndex - 1;
+  WizardForm.StatusLabel.Caption := EcoText('تثبيت ', 'Installing ') +
+    DisplayName + ' (' + IntToStr(ComponentIndex) + '/4)';
+  WizardForm.FilenameLabel.Caption := EcoText('قد تستغرق هذه الخطوة بضع دقائق.',
+    'This step may take a few minutes.');
+  EcoDetailLogPath := ChildLog;
+  WriteReceipt(WizardForm.StatusLabel.Caption);
+  ExitCode := -1;
   Result := Exec(ExpandConstant('{tmp}\') + FileName, Arguments,
     ExpandConstant('{tmp}'), SW_HIDE, ewWaitUntilTerminated, ExitCode) and
     (ExitCode = 0);
   if Result then
-    WriteReceipt('Installed ' + ComponentId + ' successfully.')
+  begin
+    WizardForm.ProgressGauge.Position := ComponentIndex;
+    WriteReceipt(EcoText('اكتمل تثبيت ', 'Installed ') + DisplayName + '.');
+    EcoWizardLog('success', DisplayName);
+  end
   else
-    WriteReceipt('Component failed: ' + ComponentId +
-      ' exit_code=' + IntToStr(ExitCode));
+  begin
+    WriteReceipt('Component failed: ' + ComponentId + ' exit_code=' + IntToStr(ExitCode));
+    EcoWizardLog('error', EcoText('تعذر تثبيت ', 'Could not install ') +
+      DisplayName + EcoText('. افتح السجل للتفاصيل.', '. Open the log for details.'));
+  end;
 end;
 
 function InstalledLocation(const UninstallKey: string; var Location: string): Boolean;
@@ -268,16 +327,19 @@ procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
   begin
-    if not RunComponent('nazm', '{#NazmInstallerName}') then
-      RaiseException('فشل تثبيت نظم. راجع سجل المثبت.');
-    if not RunComponent('baa', '{#BaaInstallerName}') then
-      RaiseException('فشل تثبيت باء. راجع سجل المثبت.');
-    if not RunComponent('takween', '{#TakweenInstallerName}') then
-      RaiseException('فشل تثبيت تكوين. راجع سجل المثبت.');
-    if not RunComponent('qalam', '{#QalamInstallerName}') then
-      RaiseException('فشل تثبيت قلم. راجع سجل المثبت.');
+    if not RunComponent('nazm', EcoText('نظم', 'Nazm'), '{#NazmInstallerName}') then
+      EcoInstallFailed('فشل تثبيت نظم. راجع سجل المثبت.');
+    if not RunComponent('baa', EcoText('باء', 'Baa'), '{#BaaInstallerName}') then
+      EcoInstallFailed('فشل تثبيت باء. راجع سجل المثبت.');
+    if not RunComponent('takween', EcoText('تكوين', 'Takween'), '{#TakweenInstallerName}') then
+      EcoInstallFailed('فشل تثبيت تكوين. راجع سجل المثبت.');
+    if not RunComponent('qalam', EcoText('قلم', 'Qalam'), '{#QalamInstallerName}') then
+      EcoInstallFailed('فشل تثبيت قلم. راجع سجل المثبت.');
+    WizardForm.StatusLabel.Caption := EcoText('التحقق من الأدوات المثبتة', 'Checking the installed tools');
+    EcoDetailLogPath := ReceiptPath;
     if not RunAllHealthChecks then
-      RaiseException('فشل فحص صحة عدة تطوير باء بعد التثبيت.');
-    WriteReceipt('Baa Developer Kit installation completed successfully.');
+      EcoInstallFailed('فشل فحص صحة عدة تطوير باء بعد التثبيت.');
+    WriteReceipt(EcoText('اكتمل تثبيت عدة تطوير باء بنجاح.',
+      'Baa Developer Kit installation completed successfully.'));
   end;
 end;

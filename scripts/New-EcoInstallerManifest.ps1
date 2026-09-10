@@ -1,13 +1,13 @@
-param(
+﻿param(
     [Parameter(Mandatory)] [string]$NazmInstaller,
     [Parameter(Mandatory)] [string]$BaaInstaller,
     [Parameter(Mandatory)] [string]$TakweenInstaller,
     [Parameter(Mandatory)] [string]$QalamInstaller,
-    [string]$ReleaseVersion = "0.4.0",
+    [string]$ReleaseVersion = "0.5.0",
     [string]$NazmVersion = "0.4.0",
     [string]$BaaVersion = "0.6.0",
     [string]$TakweenVersion = "0.1.0",
-    [string]$QalamVersion = "3.5.0",
+    [string]$QalamVersion = "3.6.0",
     [string]$BaaLspVersion = "0.1.0",
     [string]$OutputPath = ""
 )
