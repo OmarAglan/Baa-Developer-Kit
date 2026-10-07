@@ -5,7 +5,7 @@
 #define MyAppId "{{713E6720-D44C-4B1E-BFAB-43274018264F}"
 #define MyAppName "عدة تطوير باء"
 #ifndef MyAppVersion
-  #define MyAppVersion "0.5.0"
+  #define MyAppVersion "0.6.0"
 #endif
 #ifndef NazmInstallerPath
   #error NazmInstallerPath is required
@@ -86,9 +86,9 @@ WelcomeFontName=Segoe UI
 
 [Messages]
 arabic.WelcomeLabel1=أدواتك. جاهزة معاً.
-arabic.WelcomeLabel2=كل ما تحتاجه للبدء في منظومة باء، في حزمة واحدة تعمل دون تنزيلات إضافية.%n%nنظم — تجميع البرامج%nباء — المترجم والمكتبة القياسية%nتكوين — إدارة المشاريع والبناء%nقلم 3.6 — المحرر وخادم لغة باء%n%nسيثبّت المعالج الأدوات بالترتيب ويتحقق من جاهزيتها.
+arabic.WelcomeLabel2=كل ما تحتاجه للبدء في منظومة باء، في حزمة واحدة تعمل دون تنزيلات إضافية.%n%nنظم — تجميع البرامج%nباء — المترجم والمكتبة القياسية%nتكوين — إدارة المشاريع والبناء%nقلم 3.7 — المحرر وخادم لغة باء%n%nسيثبّت المعالج الأدوات بالترتيب ويتحقق من جاهزيتها.
 english.WelcomeLabel1=Your tools. Ready together.
-english.WelcomeLabel2=Start developing in the Baa ecosystem with one offline package.%n%nNazm — assembler%nBaa — compiler and standard library%nTakween — projects and builds%nQalam 3.6 — editor and Baa language server%n%nSetup installs each tool in order and checks that it is ready.
+english.WelcomeLabel2=Start developing in the Baa ecosystem with one offline package.%n%nNazm — assembler%nBaa — compiler and standard library%nTakween — projects and builds%nQalam 3.7 — editor and Baa language server%n%nSetup installs each tool in order and checks that it is ready.
 
 [Languages]
 Name: "arabic"; MessagesFile: "compiler:Languages\Arabic.isl"
@@ -140,7 +140,7 @@ begin
     NewLine + Space + EcoText('نظم 0.4.0', 'Nazm 0.4.0') +
     NewLine + Space + EcoText('باء 0.6.0', 'Baa 0.6.0') +
     NewLine + Space + EcoText('تكوين 0.1.0', 'Takween 0.1.0') +
-    NewLine + Space + EcoText('قلم 3.6.0 وخادم لغة باء 0.1.0', 'Qalam 3.6.0 and Baa-LSP 0.1.0') +
+    NewLine + Space + EcoText('قلم 3.7.0 وخادم لغة باء 0.1.0', 'Qalam 3.7.0 and Baa-LSP 0.1.0') +
     NewLine + NewLine + EcoText('تعمل الحزمة دون تنزيلات إضافية. لكل أداة إزالة مستقلة.',
       'No additional downloads. Each tool has its own uninstaller.');
 end;

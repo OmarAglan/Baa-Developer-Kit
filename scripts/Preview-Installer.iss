@@ -1,7 +1,7 @@
 ; Presentation fixture: contains no component files or install actions.
 [Setup]
 AppName=معاينة مثبتات منظومة باء
-AppVersion=0.5.0
+AppVersion=0.6.0
 DefaultDirName={tmp}\EcoInstallerPreview
 CreateAppDir=no
 Uninstallable=no

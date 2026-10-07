@@ -25,14 +25,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Nazm
-          ref: c78c993cfa3523d46d08443599e316a2a1f827ea
+          ref: 4e5997438933c38db70463f3f49dea96074982fd
           path: Nazm
 
       - name: Check out Baa
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Baa
-          ref: e330a81539dc23faf778859e73ae0dfc8e816102
+          ref: e495411a6e65d2aff12b97c5ce80fa43d5f9b369
           path: Baa
 
       - name: Check out Takween
@@ -46,14 +46,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Qalam-IDE
-          ref: 89ae7d48677994bb16a8389662c153aaa903d78b
+          ref: fe30d08a3d253d474d37c94e452daed5e83d0b54
           path: Qalam-IDE
 
       - name: Check out Baa-LSP
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Baa-LSP
-          ref: 602cdd406eed61fc75a796ca66680b8e367aad8b
+          ref: 90c8007105f97eea9330159ed67aa3a4becbcbf3
           path: Baa-LSP
 
       - uses: actions/setup-python@v5
@@ -104,7 +104,7 @@ jobs:
         shell: pwsh
         run: |
           ./Qalam-IDE/scripts/build_installer.ps1 `
-            -Version 3.6.0 `
+            -Version 3.7.0 `
             -BuildDir build/windows-release `
             -BaaLspExecutable "$env:GITHUB_WORKSPACE\Baa-LSP\build\windows-release\baa-lsp.exe" `
             -SkipBuild
@@ -127,7 +127,7 @@ jobs:
       - name: Upload versioned installer set
         uses: actions/upload-artifact@v4
         with:
-          name: baa-developer-kit-0.5.0-x64
+          name: baa-developer-kit-0.6.0-x64
           if-no-files-found: error
           path: |
             Nazm/dist/installer/nazm-setup-0.4.0-x64.exe
@@ -136,10 +136,10 @@ jobs:
             Baa/dist/installer/baa-setup-0.6.0-x64.exe.sha256
             Takween/dist/installer/takween-setup-0.1.0-x64.exe
             Takween/dist/installer/takween-setup-0.1.0-x64.exe.sha256
-            Qalam-IDE/dist/installer/qalam-setup-3.6.0-x64.exe
-            Qalam-IDE/dist/installer/qalam-setup-3.6.0-x64.exe.sha256
+            Qalam-IDE/dist/installer/qalam-setup-3.7.0-x64.exe
+            Qalam-IDE/dist/installer/qalam-setup-3.7.0-x64.exe.sha256
             Baa-Developer-Kit/dist/eco-installer-manifest-v1.json
-            Baa-Developer-Kit/dist/installer/baa-developer-kit-setup-0.5.0-x64.exe
-            Baa-Developer-Kit/dist/installer/baa-developer-kit-setup-0.5.0-x64.exe.sha256
-            Baa-Developer-Kit/dist/installer/baa-developer-kit-setup-0.5.0-x64.zip
-            Baa-Developer-Kit/dist/installer/baa-developer-kit-setup-0.5.0-x64.zip.sha256
+            Baa-Developer-Kit/dist/installer/baa-developer-kit-setup-0.6.0-x64.exe
+            Baa-Developer-Kit/dist/installer/baa-developer-kit-setup-0.6.0-x64.exe.sha256
+            Baa-Developer-Kit/dist/installer/baa-developer-kit-setup-0.6.0-x64.zip
+            Baa-Developer-Kit/dist/installer/baa-developer-kit-setup-0.6.0-x64.zip.sha256
