@@ -162,6 +162,26 @@ public static class DeveloperKitWindowProbe
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     static extern int GetClassName(IntPtr window, System.Text.StringBuilder text, int capacity);
 
+    // The first top-level window of a process whose class matches a pattern,
+    // visible or not: a process started with a hidden window style shows its
+    // first window hidden, so Process.MainWindowHandle never reports it.
+    public static IntPtr FindTopLevelWindow(uint processId, string classPattern)
+    {
+        IntPtr found = IntPtr.Zero;
+        EnumWindows(delegate (IntPtr window, IntPtr parameter) {
+            uint owner;
+            GetWindowThreadProcessId(window, out owner);
+            if (owner != processId) return true;
+            var className = new System.Text.StringBuilder(256);
+            GetClassName(window, className, className.Capacity);
+            if (!System.Text.RegularExpressions.Regex.IsMatch(className.ToString(), classPattern))
+                return true;
+            found = window;
+            return false;
+        }, IntPtr.Zero);
+        return found;
+    }
+
     // Every top-level window of a process, for diagnosing a missing main window.
     public static string[] DescribeTopLevelWindows(uint processId)
     {
@@ -202,29 +222,31 @@ public static class DeveloperKitWindowProbe
     }
     # A cold CI runner loads Qt and its plugins far slower than a warm desktop.
     $deadline = [DateTime]::UtcNow.AddSeconds(30)
+    $window = [IntPtr]::Zero
+    $rect = New-Object DeveloperKitWindowProbe+Rect
+    $usable = $false
     do {
         Start-Sleep -Milliseconds 100
-        $script:qalamProcess.Refresh()
-    } while (!$script:qalamProcess.HasExited -and
-             $script:qalamProcess.MainWindowHandle -eq [IntPtr]::Zero -and
+        # Qt names its top-level widget windows Qt<version>QWindowIcon.
+        $window = [DeveloperKitWindowProbe]::FindTopLevelWindow(
+            [uint32]$script:qalamProcess.Id, '^Qt\d+QWindowIcon$')
+        $usable = $window -ne [IntPtr]::Zero -and
+            [DeveloperKitWindowProbe]::GetWindowRect($window, [ref]$rect) -and
+            ($rect.Right - $rect.Left) -ge 640 -and
+            ($rect.Bottom - $rect.Top) -ge 480
+    } while (!$script:qalamProcess.HasExited -and !$usable -and
              [DateTime]::UtcNow -lt $deadline)
     if ($script:qalamProcess.HasExited) {
         throw "Installed Qalam exited with code $($script:qalamProcess.ExitCode)."
     }
-    if ($script:qalamProcess.MainWindowHandle -eq [IntPtr]::Zero) {
+    if (!$usable) {
         $windows = [DeveloperKitWindowProbe]::DescribeTopLevelWindows(
             [uint32]$script:qalamProcess.Id)
         Write-Host "Qalam top-level windows ($($windows.Count)):"
         $windows | ForEach-Object { Write-Host "  $_" }
-        throw 'Installed Qalam created no native window.'
-    }
-    $rect = New-Object DeveloperKitWindowProbe+Rect
-    if (![DeveloperKitWindowProbe]::GetWindowRect(
-            $script:qalamProcess.MainWindowHandle, [ref]$rect)) {
-        throw 'Installed Qalam window geometry could not be read.'
-    }
-    if (($rect.Right - $rect.Left) -lt 640 -or
-        ($rect.Bottom - $rect.Top) -lt 480) {
+        if ($window -eq [IntPtr]::Zero) {
+            throw 'Installed Qalam created no native window.'
+        }
         throw 'Installed Qalam window geometry is unusable.'
     }
     Stop-Qalam
