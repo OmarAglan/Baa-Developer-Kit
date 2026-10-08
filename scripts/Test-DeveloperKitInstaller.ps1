@@ -149,6 +149,40 @@ public static class DeveloperKitWindowProbe
     public struct Rect { public int Left, Top, Right, Bottom; }
     [DllImport("user32.dll")]
     public static extern bool GetWindowRect(IntPtr window, out Rect rectangle);
+
+    delegate bool EnumWindowsProc(IntPtr window, IntPtr parameter);
+    [DllImport("user32.dll")]
+    static extern bool EnumWindows(EnumWindowsProc callback, IntPtr parameter);
+    [DllImport("user32.dll")]
+    static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+    [DllImport("user32.dll")]
+    static extern bool IsWindowVisible(IntPtr window);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    static extern int GetWindowText(IntPtr window, System.Text.StringBuilder text, int capacity);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    static extern int GetClassName(IntPtr window, System.Text.StringBuilder text, int capacity);
+
+    // Every top-level window of a process, for diagnosing a missing main window.
+    public static string[] DescribeTopLevelWindows(uint processId)
+    {
+        var lines = new System.Collections.Generic.List<string>();
+        EnumWindows(delegate (IntPtr window, IntPtr parameter) {
+            uint owner;
+            GetWindowThreadProcessId(window, out owner);
+            if (owner != processId) return true;
+            var title = new System.Text.StringBuilder(256);
+            var className = new System.Text.StringBuilder(256);
+            GetWindowText(window, title, title.Capacity);
+            GetClassName(window, className, className.Capacity);
+            Rect rect;
+            GetWindowRect(window, out rect);
+            lines.Add(String.Format("class={0} title='{1}' visible={2} size={3}x{4}",
+                className, title, IsWindowVisible(window),
+                rect.Right - rect.Left, rect.Bottom - rect.Top));
+            return true;
+        }, IntPtr.Zero);
+        return lines.ToArray();
+    }
 }
 '@
     }
@@ -166,7 +200,8 @@ public static class DeveloperKitWindowProbe
         $env:TEMP = $previousTemp
         $env:TMP = $previousTmp
     }
-    $deadline = [DateTime]::UtcNow.AddSeconds(10)
+    # A cold CI runner loads Qt and its plugins far slower than a warm desktop.
+    $deadline = [DateTime]::UtcNow.AddSeconds(30)
     do {
         Start-Sleep -Milliseconds 100
         $script:qalamProcess.Refresh()
@@ -177,6 +212,10 @@ public static class DeveloperKitWindowProbe
         throw "Installed Qalam exited with code $($script:qalamProcess.ExitCode)."
     }
     if ($script:qalamProcess.MainWindowHandle -eq [IntPtr]::Zero) {
+        $windows = [DeveloperKitWindowProbe]::DescribeTopLevelWindows(
+            [uint32]$script:qalamProcess.Id)
+        Write-Host "Qalam top-level windows ($($windows.Count)):"
+        $windows | ForEach-Object { Write-Host "  $_" }
         throw 'Installed Qalam created no native window.'
     }
     $rect = New-Object DeveloperKitWindowProbe+Rect
