@@ -25,35 +25,35 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Nazm
-          ref: 4e5997438933c38db70463f3f49dea96074982fd
+          ref: 42380994625f142fbcfdff92421da2d3f1e8df2f
           path: Nazm
 
       - name: Check out Baa
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Baa
-          ref: e495411a6e65d2aff12b97c5ce80fa43d5f9b369
+          ref: f2c0fbc2c365eede33d98d7438764cafe0d0a19c
           path: Baa
 
       - name: Check out Takween
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Takween
-          ref: fa0c4162495267f2679d543bfc55f600719bdd5f
+          ref: 27b8b215ae30918b5625d34b756dd4421848cbe3
           path: Takween
 
       - name: Check out Qalam
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Qalam-IDE
-          ref: fe30d08a3d253d474d37c94e452daed5e83d0b54
+          ref: c8dc2a0fcd76d8878f5f85afabe589ecf383a526
           path: Qalam-IDE
 
       - name: Check out Baa-LSP
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Baa-LSP
-          ref: 90c8007105f97eea9330159ed67aa3a4becbcbf3
+          ref: 96313fb28585f0aebcda856e39a092a7e704a252
           path: Baa-LSP
 
       - uses: actions/setup-python@v5
