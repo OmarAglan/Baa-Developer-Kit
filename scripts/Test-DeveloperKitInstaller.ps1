@@ -87,6 +87,20 @@ function Normalize-PathEntry {
     return $Value.Trim().Trim('"').Replace('/', '\').TrimEnd('\').ToLowerInvariant()
 }
 
+function Test-SamePathEntries {
+    # The uninstallers rebuild PATH from its non-empty entries, so a trailing
+    # ';' or an empty entry (the Windows default user PATH ends with ';') does
+    # not survive. Restoration means the same entries in the same order.
+    param([string]$Actual, [string]$Expected)
+    $entries = {
+        param([string]$Value)
+        if ($null -eq $Value) { return @() }
+        return @($Value -split ';' | ForEach-Object { $_.Trim() } |
+            Where-Object { $_ -ne '' })
+    }
+    return (@(& $entries $Actual) -join ';') -ceq (@(& $entries $Expected) -join ';')
+}
+
 function Get-PathEntryCount {
     param([string]$PathValue, [string]$Expected)
     $wanted = Normalize-PathEntry $Expected
@@ -495,11 +509,10 @@ finally {
     }
 }
 
-if ([Environment]::GetEnvironmentVariable('Path', 'User') -ne $userPathBefore) {
+if (!(Test-SamePathEntries ([Environment]::GetEnvironmentVariable('Path', 'User')) $userPathBefore)) {
     throw 'Developer Kit uninstall did not restore user PATH.'
 }
-if ([Environment]::GetEnvironmentVariable('Path', 'Machine') -ne
-    $machinePathBefore) {
+if (!(Test-SamePathEntries ([Environment]::GetEnvironmentVariable('Path', 'Machine')) $machinePathBefore)) {
     throw 'Developer Kit uninstall changed machine PATH.'
 }
 foreach ($name in $environmentBefore.Keys) {
