@@ -349,6 +349,10 @@ try {
     Invoke-VersionProbe $nazmExecutable @($versionArgument)
     Invoke-VersionProbe (Join-Path $nazmBin 'nazm.exe') @($versionArgument)
     Invoke-VersionProbe $baaExecutable @('--version')
+    $baaVersionText = (& $baaExecutable --version | Out-String)
+    if ($baaVersionText -notmatch 'Embedded Nazm \S+ \([0-9a-f]{40}\), default') {
+        throw 'Installed Baa does not report the embedded Nazm default.'
+    }
     Invoke-VersionProbe $takweenExecutable @($versionArgument)
     Invoke-VersionProbe (Join-Path $takweenBin 'takween.exe') @('--version')
     Invoke-VersionProbe $lspExecutable @('--version')
@@ -389,6 +393,28 @@ try {
         & $program
         if ($LASTEXITCODE -ne 0) {
             throw 'Program built by the installed ecosystem failed to run.'
+        }
+
+        $embeddedProgram = Join-Path $sourceDirectory 'embedded-nazm.exe'
+        $pathWithNazm = $env:PATH
+        $hadBaaNazm = Test-Path Env:BAA_NAZM
+        $baaNazmBefore = $env:BAA_NAZM
+        try {
+            $env:PATH = "$baaDirectory;$takweenBin;$env:SystemRoot\System32;$env:SystemRoot"
+            Remove-Item Env:BAA_NAZM -ErrorAction SilentlyContinue
+            & $baaExecutable $source -o $embeddedProgram
+            if ($LASTEXITCODE -ne 0 -or
+                !(Test-Path -LiteralPath $embeddedProgram -PathType Leaf)) {
+                throw 'Installed Baa failed to assemble with its embedded Nazm.'
+            }
+            & $embeddedProgram
+            if ($LASTEXITCODE -ne 0) {
+                throw 'Program built with the embedded Nazm failed to run.'
+            }
+        }
+        finally {
+            $env:PATH = $pathWithNazm
+            if ($hadBaaNazm) { $env:BAA_NAZM = $baaNazmBefore }
         }
 
         $nazmSource = Join-Path $sourceDirectory (
