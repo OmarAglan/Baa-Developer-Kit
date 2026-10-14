@@ -25,21 +25,21 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Nazm
-          ref: 4a4da865e1a58696739faf1414158821995336ab
+          ref: f58faf061278a610720881bde015f6e70bcbd0c7
           path: Nazm
 
       - name: Check out Baa
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Baa
-          ref: f400dc8348f59511d885015d2957072ebf9d296f
+          ref: 5c173014463d0af40943e6b6556ae1e08fe3c9ca
           path: Baa
 
       - name: Check out Takween
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Takween
-          ref: 00d55149f35a9ecc08018b9d26893b283af85e6b
+          ref: eedb7b014336418043cdd757cdf8fdc5bba820f1
           path: Takween
 
       - name: Check out Qalam
@@ -53,7 +53,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Baa-LSP
-          ref: 7ec768637c5e2955b1df1daa390dc36502fbd99f
+          ref: 0bbaad1a80edfe5cceeb442c5d2f07178db383d9
           path: Baa-LSP
 
       - uses: actions/setup-python@v5
@@ -130,8 +130,8 @@ jobs:
           name: baa-developer-kit-0.6.0-x64
           if-no-files-found: error
           path: |
-            Nazm/dist/installer/nazm-setup-0.4.0-x64.exe
-            Nazm/dist/installer/nazm-setup-0.4.0-x64.exe.sha256
+            Nazm/dist/installer/nazm-setup-1.0.0-x64.exe
+            Nazm/dist/installer/nazm-setup-1.0.0-x64.exe.sha256
             Baa/dist/installer/baa-setup-0.6.0-x64.exe
             Baa/dist/installer/baa-setup-0.6.0-x64.exe.sha256
             Takween/dist/installer/takween-setup-0.1.0-x64.exe

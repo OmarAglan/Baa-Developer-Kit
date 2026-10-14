@@ -137,7 +137,7 @@ begin
   Result := EcoText('عدة تطوير باء ', 'Baa Developer Kit ') + '{#MyAppVersion}' +
     NewLine + NewLine + EcoText('نطاق التثبيت: ', 'Install scope: ') + Scope +
     NewLine + NewLine + EcoText('الأدوات التي ستُثبت بالترتيب:', 'Tools installed in order:') +
-    NewLine + Space + EcoText('نظم 0.4.0', 'Nazm 0.4.0') +
+    NewLine + Space + EcoText('نظم 1.0.0', 'Nazm 1.0.0') +
     NewLine + Space + EcoText('باء 0.6.0', 'Baa 0.6.0') +
     NewLine + Space + EcoText('تكوين 0.1.0', 'Takween 0.1.0') +
     NewLine + Space + EcoText('قلم 3.7.0 وخادم لغة باء 0.1.0', 'Qalam 3.7.0 and Baa-LSP 0.1.0') +

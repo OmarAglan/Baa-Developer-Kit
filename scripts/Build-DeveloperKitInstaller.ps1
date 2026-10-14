@@ -1,6 +1,6 @@
 ﻿param(
     [string]$ReleaseVersion = '0.6.0',
-    [string]$NazmInstaller = '..\Nazm\dist\installer\nazm-setup-0.4.0-x64.exe',
+    [string]$NazmInstaller = '..\Nazm\dist\installer\nazm-setup-1.0.0-x64.exe',
     [string]$BaaInstaller = '..\Baa\dist\installer\baa-setup-0.6.0-x64.exe',
     [string]$TakweenInstaller = '..\Takween\dist\installer\takween-setup-0.1.0-x64.exe',
     [string]$QalamInstaller = '..\Qalam-IDE\dist\installer\qalam-setup-3.7.0-x64.exe',
@@ -36,7 +36,7 @@ function Resolve-Installer {
     return $resolved
 }
 
-$NazmInstaller = Resolve-Installer $NazmInstaller 'nazm-setup-0.4.0-x64.exe'
+$NazmInstaller = Resolve-Installer $NazmInstaller 'nazm-setup-1.0.0-x64.exe'
 $BaaInstaller = Resolve-Installer $BaaInstaller 'baa-setup-0.6.0-x64.exe'
 $TakweenInstaller = Resolve-Installer $TakweenInstaller 'takween-setup-0.1.0-x64.exe'
 $QalamInstaller = Resolve-Installer $QalamInstaller 'qalam-setup-3.7.0-x64.exe'
