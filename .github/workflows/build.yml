@@ -32,14 +32,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Baa
-          ref: 8c6cbcf105701b9bfcbcd2e92e31c2e3b6b0ef75
+          ref: dcf3a0ccf8652c627a07b8d7a704f69c6429018d
           path: Baa
 
       - name: Check out Takween
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Takween
-          ref: a77404cd180a7dc4922d82c3d2ecc1aa44df0f63
+          ref: a597c5da3993f5678dc2ec22e8e9f48059a49164
           path: Takween
 
       - name: Check out Qalam
