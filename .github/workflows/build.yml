@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OmarAglan/Takween
-          ref: a597c5da3993f5678dc2ec22e8e9f48059a49164
+          ref: 6ee36fe20330918c82fa3291110dbd1b7b244e61
           path: Takween
 
       - name: Check out Qalam
