@@ -23,7 +23,7 @@
     "components": {
       "type": "array",
       "minItems": 4,
-      "maxItems": 4,
+      "maxItems": 5,
       "items": { "$ref": "#/$defs/component" }
     },
     "bundled_programs": {
@@ -47,13 +47,17 @@
         "health_check"
       ],
       "properties": {
-        "id": { "enum": ["nazm", "baa", "takween", "qalam"] },
+        "id": { "enum": ["nazm", "baa", "takween", "qalam", "arbsh"] },
         "display_name": { "type": "string", "minLength": 1 },
         "version": {
           "type": "string",
           "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$"
         },
-        "install_order": { "type": "integer", "minimum": 10, "maximum": 40 },
+        "install_order": { "type": "integer", "minimum": 10, "maximum": 50 },
+        "optional": {
+          "description": "Installed only when the user selects it. Absent means always installed.",
+          "const": true
+        },
         "installer": {
           "type": "string",
           "pattern": "^[^/\\\\]+\\.exe$"

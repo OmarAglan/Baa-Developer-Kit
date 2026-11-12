@@ -42,6 +42,7 @@ $uninstallKeys = [ordered]@{
     baa = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{E4B6D77C-6C22-4E2D-8F9D-61D34A26B0D1}_is1'
     takween = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{9D321DC1-69B3-44F0-A52A-86DB6A6E0C97}_is1'
     qalam = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{1A6F6714-2C14-4DBD-BACB-B26CBABE36EE}_is1'
+    arbsh = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{37388BF3-5853-4720-90FD-AB45B9B9E7A7}_is1'
 }
 foreach ($entry in $uninstallKeys.GetEnumerator()) {
     if (Test-Path -LiteralPath $entry.Value) {
@@ -79,6 +80,7 @@ $componentDirectories = [ordered]@{
     baa = Join-Path $componentRoot 'baa'
     takween = Join-Path $componentRoot 'takween'
     qalam = Join-Path $componentRoot 'qalam'
+    arbsh = Join-Path $componentRoot 'arbsh'
 }
 
 function Normalize-PathEntry {
@@ -119,7 +121,7 @@ function Wait-State {
 }
 
 function Invoke-DeveloperKit {
-    param([string]$Executable = '')
+    param([string]$Executable = '', [string[]]$ExtraArguments = @())
     if ([string]::IsNullOrWhiteSpace($Executable)) {
         $Executable = $Installer
     }
@@ -128,7 +130,7 @@ function Invoke-DeveloperKit {
         '/CURRENTUSER',
         "/COMPONENTROOT=`"$componentRoot`"",
         "/LOG=`"$setupLog`""
-    )
+    ) + $ExtraArguments
     $process = Start-Process -FilePath $Executable -ArgumentList $arguments `
         -WindowStyle Hidden -Wait -PassThru
     if ($process.ExitCode -ne 0) {
@@ -267,7 +269,7 @@ public static class DeveloperKitWindowProbe
 }
 
 function Uninstall-Components {
-    foreach ($id in @('qalam', 'takween', 'baa', 'nazm')) {
+    foreach ($id in @('arbsh', 'qalam', 'takween', 'baa', 'nazm')) {
         $directory = $componentDirectories[$id]
         $uninstaller = Join-Path $directory 'unins000.exe'
         if (Test-Path -LiteralPath $uninstaller -PathType Leaf) {
@@ -313,7 +315,11 @@ try {
         }
     }
     $installed = $true
-    Invoke-DeveloperKit
+    # ArbSh is optional and unselected by default; the repair run selects it.
+    if (Test-Path -LiteralPath $uninstallKeys.arbsh) {
+        throw 'Developer Kit installed the optional ArbSh without the arbsh task.'
+    }
+    Invoke-DeveloperKit -ExtraArguments @('/MERGETASKS="arbsh"')
 
     foreach ($entry in $uninstallKeys.GetEnumerator()) {
         if (!(Test-Path -LiteralPath $entry.Value)) {
@@ -325,8 +331,9 @@ try {
     $baaDirectory = $componentDirectories.baa
     $takweenBin = Join-Path $componentDirectories.takween 'bin'
     $qalamDirectory = $componentDirectories.qalam
+    $arbshBin = Join-Path $componentDirectories.arbsh 'bin'
     $userPathAfter = [Environment]::GetEnvironmentVariable('Path', 'User')
-    foreach ($expected in @($nazmBin, $baaDirectory, $takweenBin)) {
+    foreach ($expected in @($nazmBin, $baaDirectory, $takweenBin, $arbshBin)) {
         $entryCount = Get-PathEntryCount $userPathAfter $expected
         if ($entryCount -ne 1) {
             throw "Installer PATH entry count was $entryCount, expected 1: $expected; PATH=$userPathAfter"
@@ -356,12 +363,14 @@ try {
     Invoke-VersionProbe $takweenExecutable @($versionArgument)
     Invoke-VersionProbe (Join-Path $takweenBin 'takween.exe') @('--version')
     Invoke-VersionProbe $lspExecutable @('--version')
+    $arbshExecutable = Join-Path $arbshBin 'arbsh.exe'
+    Invoke-VersionProbe $arbshExecutable @('--version')
 
     $previousPath = $env:PATH
     $previousBaaHome = $env:BAA_HOME
     $previousBaaStdlib = $env:BAA_STDLIB
     try {
-        $env:PATH = "$nazmBin;$baaDirectory;$takweenBin;$env:SystemRoot\System32;$env:SystemRoot"
+        $env:PATH = "$nazmBin;$baaDirectory;$takweenBin;$arbshBin;$env:SystemRoot\System32;$env:SystemRoot"
         $env:BAA_HOME = $baaDirectory
         $env:BAA_STDLIB = Join-Path $baaDirectory 'stdlib'
         foreach ($externalTool in @('gcc.exe', 'ld.exe', 'cmake.exe',
@@ -500,6 +509,23 @@ try {
         finally {
             Pop-Location
         }
+
+        # ArbSh's «تشغيل» drives the installed Baa and Takween through their
+        # public CLIs and returns the program's own exit code.
+        $runCommand = -join [char[]](0x062A, 0x0634, 0x063A, 0x064A, 0x0644)
+        $sevenSource = Join-Path $sourceDirectory ('exit-seven.' + $baaExtension)
+        [IO.File]::WriteAllText(
+            $sevenSource,
+            "$integerKeyword $entryPoint() {`n    $returnKeyword $([char]0x0667).`n}`n",
+            [Text.UTF8Encoding]::new($false))
+        & $arbshExecutable --working-dir $sourceDirectory --command "$runCommand exit-seven.$baaExtension"
+        if ($LASTEXITCODE -ne 7) {
+            throw "Installed ArbSh single-file run returned $LASTEXITCODE, expected 7."
+        }
+        & $arbshExecutable --working-dir $mixedProject --command $runCommand
+        if ($LASTEXITCODE -ne 0) {
+            throw "Installed ArbSh Takween project run returned $LASTEXITCODE."
+        }
         Test-QalamWindow $qalamExecutable
     }
     finally {
@@ -512,7 +538,7 @@ try {
     $newReceipts = @(Get-ChildItem -LiteralPath $receiptDirectory -File |
         Where-Object { $_.LastWriteTime -ge $testStarted })
     foreach ($suffix in @('-nazm.log', '-baa.log', '-takween.log',
-                           '-qalam.log', '-manifest.json')) {
+                           '-qalam.log', '-arbsh.log', '-manifest.json')) {
         if (!($newReceipts | Where-Object { $_.Name.EndsWith($suffix) })) {
             throw "Developer Kit did not preserve its $suffix receipt."
         }

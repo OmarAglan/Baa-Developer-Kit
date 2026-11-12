@@ -19,6 +19,9 @@
 #ifndef QalamInstallerPath
   #error QalamInstallerPath is required
 #endif
+#ifndef ArbShInstallerPath
+  #error ArbShInstallerPath is required
+#endif
 #ifndef InstallerManifestPath
   #error InstallerManifestPath is required
 #endif
@@ -34,11 +37,15 @@
 #ifndef QalamSha256
   #error QalamSha256 is required
 #endif
+#ifndef ArbShSha256
+  #error ArbShSha256 is required
+#endif
 
 #define NazmInstallerName ExtractFileName(NazmInstallerPath)
 #define BaaInstallerName ExtractFileName(BaaInstallerPath)
 #define TakweenInstallerName ExtractFileName(TakweenInstallerPath)
 #define QalamInstallerName ExtractFileName(QalamInstallerPath)
+#define ArbShInstallerName ExtractFileName(ArbShInstallerPath)
 #define InstallerManifestName ExtractFileName(InstallerManifestPath)
 
 [Setup]
@@ -86,15 +93,20 @@ WelcomeFontName=Segoe UI
 
 [Messages]
 arabic.WelcomeLabel1=أدواتك. جاهزة معاً.
-arabic.WelcomeLabel2=كل ما تحتاجه للبدء في منظومة باء، في حزمة واحدة تعمل دون تنزيلات إضافية.%n%nنظم — تجميع البرامج%nباء — المترجم والمكتبة القياسية%nتكوين — إدارة المشاريع والبناء%nقلم 3.7 — المحرر وخادم لغة باء%n%nسيثبّت المعالج الأدوات بالترتيب ويتحقق من جاهزيتها.
+arabic.WelcomeLabel2=كل ما تحتاجه للبدء في منظومة باء، في حزمة واحدة تعمل دون تنزيلات إضافية.%n%nنظم — تجميع البرامج%nباء — المترجم والمكتبة القياسية%nتكوين — إدارة المشاريع والبناء%nقلم 3.7 — المحرر وخادم لغة باء%nأربش — الصدفة والطرفية العربية (اختياري)%n%nسيثبّت المعالج الأدوات بالترتيب ويتحقق من جاهزيتها.
 english.WelcomeLabel1=Your tools. Ready together.
-english.WelcomeLabel2=Start developing in the Baa ecosystem with one offline package.%n%nNazm — assembler%nBaa — compiler and standard library%nTakween — projects and builds%nQalam 3.7 — editor and Baa language server%n%nSetup installs each tool in order and checks that it is ready.
+english.WelcomeLabel2=Start developing in the Baa ecosystem with one offline package.%n%nNazm — assembler%nBaa — compiler and standard library%nTakween — projects and builds%nQalam 3.7 — editor and Baa language server%nArbSh — Arabic shell and terminal (optional)%n%nSetup installs each tool in order and checks that it is ready.
 
 [Languages]
 Name: "arabic"; MessagesFile: "compiler:Languages\Arabic.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
+[Tasks]
+; أربش اختياري وغير محدد افتراضيًا حتى تكتمل بوابة E2.2 كلها.
+Name: "arbsh"; Description: "أربش 0.8.1-alpha — الصدفة والطرفية العربية"; GroupDescription: "أدوات اختيارية:"; Flags: unchecked
+
 [Files]
+Source: "{#ArbShInstallerPath}"; Flags: dontcopy
 Source: "{#NazmInstallerPath}"; Flags: dontcopy
 Source: "{#BaaInstallerPath}"; Flags: dontcopy
 Source: "{#TakweenInstallerPath}"; Flags: dontcopy
@@ -108,16 +120,30 @@ const
   BaaHash = '{#BaaSha256}';
   TakweenHash = '{#TakweenSha256}';
   QalamHash = '{#QalamSha256}';
+  ArbShHash = '{#ArbShSha256}';
   NazmUninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{8D3D57AE-41CF-4B8A-95E9-270E4564E2A1}_is1';
   BaaUninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{E4B6D77C-6C22-4E2D-8F9D-61D34A26B0D1}_is1';
   TakweenUninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{9D321DC1-69B3-44F0-A52A-86DB6A6E0C97}_is1';
   QalamUninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{1A6F6714-2C14-4DBD-BACB-B26CBABE36EE}_is1';
+  ArbShUninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{37388BF3-5853-4720-90FD-AB45B9B9E7A7}_is1';
 
 var
   ReceiptDirectory: string;
   ReceiptStem: string;
   ReceiptPath: string;
   ComponentIndex: Integer;
+
+function ArbShSelected: Boolean;
+begin
+  Result := WizardIsTaskSelected('arbsh');
+end;
+
+function ComponentCount: Integer;
+begin
+  Result := 4;
+  if ArbShSelected then
+    Result := 5;
+end;
 
 function InstallerRoot: Integer;
 begin
@@ -140,7 +166,10 @@ begin
     NewLine + Space + EcoText('نظم 1.0.0', 'Nazm 1.0.0') +
     NewLine + Space + EcoText('باء 0.6.0', 'Baa 0.6.0') +
     NewLine + Space + EcoText('تكوين 0.1.0', 'Takween 0.1.0') +
-    NewLine + Space + EcoText('قلم 3.7.0 وخادم لغة باء 0.1.0', 'Qalam 3.7.0 and Baa-LSP 0.1.0') +
+    NewLine + Space + EcoText('قلم 3.7.0 وخادم لغة باء 0.1.0', 'Qalam 3.7.0 and Baa-LSP 0.1.0');
+  if ArbShSelected then
+    Result := Result + NewLine + Space + EcoText('أربش 0.8.1-alpha', 'ArbSh 0.8.1-alpha');
+  Result := Result +
     NewLine + NewLine + EcoText('تعمل الحزمة دون تنزيلات إضافية. لكل أداة إزالة مستقلة.',
       'No additional downloads. Each tool has its own uninstaller.');
 end;
@@ -195,7 +224,8 @@ begin
     VerifyInstaller('{#NazmInstallerName}', NazmHash) and
     VerifyInstaller('{#BaaInstallerName}', BaaHash) and
     VerifyInstaller('{#TakweenInstallerName}', TakweenHash) and
-    VerifyInstaller('{#QalamInstallerName}', QalamHash);
+    VerifyInstaller('{#QalamInstallerName}', QalamHash) and
+    VerifyInstaller('{#ArbShInstallerName}', ArbShHash);
   if Result then
   begin
     ExtractTemporaryFile('{#InstallerManifestName}');
@@ -238,10 +268,10 @@ begin
     ScopeArgument + ' /LANG=' + ActiveLanguage + ComponentDirectoryArgument(ComponentId) +
     ' /LOG="' + ChildLog + '"';
   ComponentIndex := ComponentIndex + 1;
-  WizardForm.ProgressGauge.Max := 4;
+  WizardForm.ProgressGauge.Max := ComponentCount;
   WizardForm.ProgressGauge.Position := ComponentIndex - 1;
   WizardForm.StatusLabel.Caption := EcoText('تثبيت ', 'Installing ') +
-    DisplayName + ' (' + IntToStr(ComponentIndex) + '/4)';
+    DisplayName + ' (' + IntToStr(ComponentIndex) + '/' + IntToStr(ComponentCount) + ')';
   WizardForm.FilenameLabel.Caption := EcoText('قد تستغرق هذه الخطوة بضع دقائق.',
     'This step may take a few minutes.');
   EcoDetailLogPath := ChildLog;
@@ -305,6 +335,8 @@ begin
   if Result then
     Result := InstalledLocation(QalamUninstallKey, QalamLocation) and
       FileExists(AddBackslash(QalamLocation) + 'Qalam.exe');
+  if Result and ArbShSelected then
+    Result := RunVersionProbe('arbsh', ArbShUninstallKey, 'bin\arbsh.exe', '--version');
   if Result then
     WriteReceipt('All ecosystem health checks passed.')
   else
@@ -335,6 +367,9 @@ begin
       EcoInstallFailed('فشل تثبيت تكوين. راجع سجل المثبت.');
     if not RunComponent('qalam', EcoText('قلم', 'Qalam'), '{#QalamInstallerName}') then
       EcoInstallFailed('فشل تثبيت قلم. راجع سجل المثبت.');
+    if ArbShSelected and
+       not RunComponent('arbsh', EcoText('أربش', 'ArbSh'), '{#ArbShInstallerName}') then
+      EcoInstallFailed('فشل تثبيت أربش. راجع سجل المثبت.');
     WizardForm.StatusLabel.Caption := EcoText('التحقق من الأدوات المثبتة', 'Checking the installed tools');
     EcoDetailLogPath := ReceiptPath;
     if not RunAllHealthChecks then

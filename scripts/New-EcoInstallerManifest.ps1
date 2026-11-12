@@ -3,12 +3,14 @@
     [Parameter(Mandatory)] [string]$BaaInstaller,
     [Parameter(Mandatory)] [string]$TakweenInstaller,
     [Parameter(Mandatory)] [string]$QalamInstaller,
+    [Parameter(Mandatory)] [string]$ArbShInstaller,
     [string]$ReleaseVersion = "0.6.0",
     [string]$NazmVersion = "1.0.0",
     [string]$BaaVersion = "0.6.0",
     [string]$TakweenVersion = "0.1.0",
     [string]$QalamVersion = "3.7.0",
     [string]$BaaLspVersion = "0.1.0",
+    [string]$ArbShVersion = "0.8.1-alpha",
     [string]$OutputPath = ""
 )
 
@@ -26,7 +28,8 @@ function New-Component {
         [int]$Order,
         [string]$Installer,
         [string]$Program,
-        [string[]]$Arguments
+        [string[]]$Arguments,
+        [switch]$Optional
     )
 
     $resolved = (Resolve-Path -LiteralPath $Installer).Path
@@ -35,7 +38,7 @@ function New-Component {
         throw "Installer name must be '$expectedName': $resolved"
     }
 
-    [ordered]@{
+    $component = [ordered]@{
         id = $Id
         display_name = $DisplayName
         version = $Version
@@ -55,6 +58,9 @@ function New-Component {
             expected_exit_code = 0
         }
     }
+    # Optional components install only when the user selects them; absent means required.
+    if ($Optional) { $component.optional = $true }
+    $component
 }
 
 $nazmName = -join [char[]](0x0646, 0x0638, 0x0645)
@@ -73,6 +79,8 @@ $components = @(
         ("bin\" + $takweenName + ".exe") @($arabicVersion)
     New-Component "qalam" $qalamName $QalamVersion 40 $QalamInstaller `
         "baa-lsp\baa-lsp.exe" @("--version")
+    New-Component "arbsh" (-join [char[]](0x0623, 0x0631, 0x0628, 0x0634)) `
+        $ArbShVersion 50 $ArbShInstaller "bin\arbsh.exe" @("--version") -Optional
 )
 
 $bundledPrograms = @(

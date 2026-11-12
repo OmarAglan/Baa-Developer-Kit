@@ -56,6 +56,18 @@ jobs:
           ref: ab9a105c3cde06f546b9f3811f257b5c04cc4e52
           path: Baa-LSP
 
+      - name: Check out ArbSh
+        uses: actions/checkout@v4
+        with:
+          repository: RuqoomTech/ArbSh
+          ref: 0d3617892d5bc6f0e6394150f8378b68403a48a6
+          path: ArbSh
+
+      - name: Install .NET SDK for ArbSh
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: ArbSh/global.json
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -109,6 +121,10 @@ jobs:
             -BaaLspExecutable "$env:GITHUB_WORKSPACE\Baa-LSP\build\windows-release\baa-lsp.exe" `
             -SkipBuild
 
+      - name: Build ArbSh installer
+        shell: pwsh
+        run: ./ArbSh/scripts/build_installer.ps1
+
       - name: Build offline Developer Kit
         shell: pwsh
         working-directory: Baa-Developer-Kit
@@ -138,6 +154,8 @@ jobs:
             Takween/dist/installer/takween-setup-0.1.0-x64.exe.sha256
             Qalam-IDE/dist/installer/qalam-setup-3.7.0-x64.exe
             Qalam-IDE/dist/installer/qalam-setup-3.7.0-x64.exe.sha256
+            ArbSh/dist/installer/arbsh-setup-0.8.1-alpha-x64.exe
+            ArbSh/dist/installer/arbsh-setup-0.8.1-alpha-x64.exe.sha256
             Baa-Developer-Kit/dist/eco-installer-manifest-v1.json
             Baa-Developer-Kit/dist/installer/baa-developer-kit-setup-0.6.0-x64.exe
             Baa-Developer-Kit/dist/installer/baa-developer-kit-setup-0.6.0-x64.exe.sha256

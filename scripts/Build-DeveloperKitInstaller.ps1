@@ -4,6 +4,7 @@
     [string]$BaaInstaller = '..\Baa\dist\installer\baa-setup-0.6.0-x64.exe',
     [string]$TakweenInstaller = '..\Takween\dist\installer\takween-setup-0.1.0-x64.exe',
     [string]$QalamInstaller = '..\Qalam-IDE\dist\installer\qalam-setup-3.7.0-x64.exe',
+    [string]$ArbShInstaller = '..\ArbSh\dist\installer\arbsh-setup-0.8.1-alpha-x64.exe',
     [string]$IsccPath = '',
     [string]$SignToolName = '',
     [string]$SignToolCommand = ''
@@ -40,6 +41,7 @@ $NazmInstaller = Resolve-Installer $NazmInstaller 'nazm-setup-1.0.0-x64.exe'
 $BaaInstaller = Resolve-Installer $BaaInstaller 'baa-setup-0.6.0-x64.exe'
 $TakweenInstaller = Resolve-Installer $TakweenInstaller 'takween-setup-0.1.0-x64.exe'
 $QalamInstaller = Resolve-Installer $QalamInstaller 'qalam-setup-3.7.0-x64.exe'
+$ArbShInstaller = Resolve-Installer $ArbShInstaller 'arbsh-setup-0.8.1-alpha-x64.exe'
 
 $manifestPath = Join-Path $root 'dist\eco-installer-manifest-v1.json'
 & (Join-Path $PSScriptRoot 'New-EcoInstallerManifest.ps1') `
@@ -47,6 +49,7 @@ $manifestPath = Join-Path $root 'dist\eco-installer-manifest-v1.json'
     -BaaInstaller $BaaInstaller `
     -TakweenInstaller $TakweenInstaller `
     -QalamInstaller $QalamInstaller `
+    -ArbShInstaller $ArbShInstaller `
     -ReleaseVersion $ReleaseVersion `
     -QalamVersion '3.7.0' `
     -OutputPath $manifestPath
@@ -63,6 +66,10 @@ if ($bundledPrograms.Count -ne 1 -or
 $hashes = @{}
 foreach ($component in $manifest.components) {
     $hashes[$component.id] = $component.sha256
+}
+$optionalIds = @($manifest.components | Where-Object { $_.optional } | ForEach-Object id)
+if ($optionalIds.Count -ne 1 -or $optionalIds[0] -cne 'arbsh') {
+    throw 'Installer manifest must record ArbSh as the only optional component.'
 }
 
 if ([string]::IsNullOrWhiteSpace($IsccPath)) {
@@ -88,11 +95,13 @@ $definitions = @(
     "/DBaaInstallerPath=$BaaInstaller",
     "/DTakweenInstallerPath=$TakweenInstaller",
     "/DQalamInstallerPath=$QalamInstaller",
+    "/DArbShInstallerPath=$ArbShInstaller",
     "/DInstallerManifestPath=$manifestPath",
     "/DNazmSha256=$($hashes.nazm)",
     "/DBaaSha256=$($hashes.baa)",
     "/DTakweenSha256=$($hashes.takween)",
-    "/DQalamSha256=$($hashes.qalam)"
+    "/DQalamSha256=$($hashes.qalam)",
+    "/DArbShSha256=$($hashes.arbsh)"
 )
 if ([string]::IsNullOrWhiteSpace($SignToolName) -ne
     [string]::IsNullOrWhiteSpace($SignToolCommand)) {

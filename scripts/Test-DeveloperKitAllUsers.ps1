@@ -30,12 +30,14 @@ $uninstallKeys = [ordered]@{
     baa = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{E4B6D77C-6C22-4E2D-8F9D-61D34A26B0D1}_is1'
     takween = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{9D321DC1-69B3-44F0-A52A-86DB6A6E0C97}_is1'
     qalam = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{1A6F6714-2C14-4DBD-BACB-B26CBABE36EE}_is1'
+    arbsh = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{37388BF3-5853-4720-90FD-AB45B9B9E7A7}_is1'
 }
 $componentDirectories = [ordered]@{
     nazm = Join-Path $env:ProgramFiles 'Nazm'
     baa = Join-Path $env:ProgramFiles 'Baa'
     takween = Join-Path $env:ProgramFiles 'Takween'
     qalam = Join-Path $env:ProgramFiles 'Qalam'
+    arbsh = Join-Path $env:ProgramFiles 'ArbSh'
 }
 foreach ($entry in $uninstallKeys.GetEnumerator()) {
     if (Test-Path -LiteralPath $entry.Value) {
@@ -72,6 +74,10 @@ $qalamName = -join [char[]](0x0642, 0x0644, 0x0645)
 $qalamShortcut = Join-Path $env:ProgramData (
     'Microsoft\Windows\Start Menu\Programs\' + $qalamName + '\' +
     $qalamName + '.lnk')
+$arbshName = -join [char[]](0x0623, 0x0631, 0x0628, 0x0634)
+$arbshShortcut = Join-Path $env:ProgramData (
+    'Microsoft\Windows\Start Menu\Programs\' + $arbshName + '\' +
+    $arbshName + '.lnk')
 $versionArgument = '--' +
     (-join [char[]](0x0625, 0x0635, 0x062F, 0x0627, 0x0631))
 
@@ -115,7 +121,7 @@ function Wait-State {
 function Invoke-DeveloperKit {
     $process = Start-Process -FilePath $Installer -ArgumentList @(
         '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-',
-        '/ALLUSERS', "/LOG=`"$setupLog`""
+        '/ALLUSERS', '/MERGETASKS="arbsh"', "/LOG=`"$setupLog`""
     ) -WindowStyle Hidden -Wait -PassThru
     if ($process.ExitCode -ne 0) {
         throw "All-users Developer Kit failed with exit code $($process.ExitCode). Log: $setupLog"
@@ -123,7 +129,7 @@ function Invoke-DeveloperKit {
 }
 
 function Uninstall-Components {
-    foreach ($id in @('qalam', 'takween', 'baa', 'nazm')) {
+    foreach ($id in @('arbsh', 'qalam', 'takween', 'baa', 'nazm')) {
         $uninstaller = Join-Path $componentDirectories[$id] 'unins000.exe'
         if (Test-Path -LiteralPath $uninstaller -PathType Leaf) {
             $process = Start-Process -FilePath $uninstaller -ArgumentList @(
@@ -154,8 +160,9 @@ try {
     $nazmBin = Join-Path $componentDirectories.nazm 'bin'
     $baaDirectory = $componentDirectories.baa
     $takweenBin = Join-Path $componentDirectories.takween 'bin'
+    $arbshBin = Join-Path $componentDirectories.arbsh 'bin'
     $machinePathAfter = [Environment]::GetEnvironmentVariable('Path', 'Machine')
-    foreach ($expected in @($nazmBin, $baaDirectory, $takweenBin)) {
+    foreach ($expected in @($nazmBin, $baaDirectory, $takweenBin, $arbshBin)) {
         if ((Get-PathEntryCount $machinePathAfter $expected) -ne 1) {
             throw "Machine PATH does not contain exactly one owned entry: $expected"
         }
@@ -178,6 +185,9 @@ try {
     }
     if (!(Test-Path -LiteralPath $qalamShortcut -PathType Leaf)) {
         throw 'All-users Qalam Start Menu shortcut is missing.'
+    }
+    if (!(Test-Path -LiteralPath $arbshShortcut -PathType Leaf)) {
+        throw 'All-users ArbSh Start Menu shortcut is missing.'
     }
 
     $nazmExecutable = Join-Path $nazmBin ($nazmName + '.exe')
@@ -214,6 +224,14 @@ try {
     & $program
     if ($LASTEXITCODE -ne 0) {
         throw 'All-users compiled program failed to run.'
+    }
+    $arbshExecutable = Join-Path $arbshBin 'arbsh.exe'
+    & $arbshExecutable --version
+    if ($LASTEXITCODE -ne 0) { throw 'All-users ArbSh probe failed.' }
+    $runCommand = -join [char[]](0x062A, 0x0634, 0x063A, 0x064A, 0x0644)
+    & $arbshExecutable --working-dir $programDirectory --command "$runCommand all-users.$baaExtension"
+    if ($LASTEXITCODE -ne 0) {
+        throw "All-users ArbSh run of a Baa file returned $LASTEXITCODE."
     }
 
     Uninstall-Components
@@ -254,6 +272,9 @@ foreach ($directory in $componentDirectories.Values) {
 }
 if (Test-Path -LiteralPath $qalamShortcut) {
     throw 'All-users uninstall left the Qalam Start Menu shortcut.'
+}
+if (Test-Path -LiteralPath $arbshShortcut) {
+    throw 'All-users uninstall left the ArbSh Start Menu shortcut.'
 }
 
 Write-Output 'Baa Developer Kit all-users installer contract passed.'
