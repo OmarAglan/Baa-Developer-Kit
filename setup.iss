@@ -105,7 +105,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 ; أربش اختياري وغير محدد افتراضيًا حتى تكتمل بوابة E2.2 كلها.
-Name: "arbsh"; Description: "أربش 0.9.0 — الصدفة والطرفية العربية"; GroupDescription: "أدوات اختيارية:"; Flags: unchecked
+Name: "arbsh"; Description: "أربش 0.9.1 — الصدفة والطرفية العربية"; GroupDescription: "أدوات اختيارية:"; Flags: unchecked
 
 [Files]
 Source: "{#ArbShInstallerPath}"; Flags: dontcopy
@@ -170,7 +170,7 @@ begin
     NewLine + Space + EcoText('تكوين 0.1.0', 'Takween 0.1.0') +
     NewLine + Space + EcoText('قلم 3.7.0 وخادم لغة باء 0.1.0', 'Qalam 3.7.0 and Baa-LSP 0.1.0');
   if ArbShSelected then
-    Result := Result + NewLine + Space + EcoText('أربش 0.9.0', 'ArbSh 0.9.0');
+    Result := Result + NewLine + Space + EcoText('أربش 0.9.1', 'ArbSh 0.9.1');
   Result := Result +
     NewLine + NewLine + EcoText('تعمل الحزمة دون تنزيلات إضافية. لكل أداة إزالة مستقلة.',
       'No additional downloads. Each tool has its own uninstaller.');

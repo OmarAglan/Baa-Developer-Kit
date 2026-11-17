@@ -10,7 +10,7 @@
     [string]$TakweenVersion = "0.1.0",
     [string]$QalamVersion = "3.7.0",
     [string]$BaaLspVersion = "0.1.0",
-    [string]$ArbShVersion = "0.9.0",
+    [string]$ArbShVersion = "0.9.1",
     [string]$OutputPath = ""
 )
 
