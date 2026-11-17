@@ -60,7 +60,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: RuqoomTech/ArbSh
-          ref: d9066b69be97c457adc88e76753e53655e6e2372
+          ref: 6f092a730e25ec9f080c0129f3670bc3919ed503
           path: ArbSh
 
       - name: Install .NET SDK for ArbSh
